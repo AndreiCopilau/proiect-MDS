@@ -9,7 +9,7 @@
 ## Members:
 - Copilău Andrei
 - Florea Mihai-Alexandru
-- Vasile Radu
+- Vasile Radu-Mihai
 
 ## Backlog:
 [Link catre backlog](https://copilauandrei.atlassian.net/jira/software/projects/KAN/boards/1?assignee=unassigned)
