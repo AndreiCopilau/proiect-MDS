@@ -11,5 +11,5 @@
 - Florea Mihai-Alexandru
 - Vasile Radu
 
-## Backlog
+## Backlog:
 [Link catre backlog](https://copilauandrei.atlassian.net/jira/software/projects/KAN/boards/1?assignee=unassigned)
