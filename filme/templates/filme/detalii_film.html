@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{{ film.title }}</title>
+</head>
+<body>
+    <a href="/">← Înapoi</a>
+    <h1>{{ film.title }}</h1>
+    <img src="https://image.tmdb.org/t/p/w300{{ film.poster_path }}" alt="{{ film.title }}">
+    <p><strong>Descriere:</strong> {{ film.overview }}</p>
+    <p><strong>An lansare:</strong> {{ film.release_date }}</p>
+    <p><strong>Genuri:</strong>
+        {% for gen in film.genres %}
+            {{ gen.name }}{% if not forloop.last %}, {% endif %}
+        {% endfor %}
+    </p>
+    <p><strong>Scor TMDB:</strong> {{ film.vote_average }}/10</p>
+</body>
+</html>
