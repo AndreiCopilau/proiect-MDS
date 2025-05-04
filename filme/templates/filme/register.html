@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Înregistrare</title>
+</head>
+<body>
+    <h2>Înregistrare Utilizator</h2>
+    <form method="POST">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Înregistrează-te</button>
+    </form>
+    <p>Ai deja cont? <a href="{% url 'login' %}">Autentifică-te aici</a></p>
+</body>
+</html>

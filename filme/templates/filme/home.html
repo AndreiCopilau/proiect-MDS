@@ -9,6 +9,12 @@
 </head>
 <body>
     <h1>Recomandari pe Banda</h1> 
+    {% if user.is_authenticated %}
+        <p>Bun venit, {{ user.username }}! <a href="{% url 'logout' %}">Deconectează-te</a></p>
+    {% else %}
+        <p><a href="{% url 'login' %}">Autentifică-te</a> | <a href="{% url 'register' %}">Înregistrează-te</a></p>
+    {% endif %}
+
     <h3>Filme Populare</h3>
     {% for film in filme %}
         <div class="film">

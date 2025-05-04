@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Autentificare</title>
+</head>
+
+<body>
+    <h2>Autentificare</h2>
+    {% if error %}
+        <p style="color:red;">{{ error }}</p>
+    {% endif %}
+    <form method="POST">
+        {% csrf_token %}
+        <label for="username">Nume utilizator:</label>
+        <input type="text" name="username" required><br>
+        <label for="password">Parolă:</label>
+        <input type="password" name="password" required><br>
+        <button type="submit">Autentifică-te</button>
+    </form>
+    <p>Nu ai cont? <a href="{% url 'register' %}">Înregistrează-te aici</a></p>
+</body>
+</html>
