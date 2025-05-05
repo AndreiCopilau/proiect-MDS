@@ -16,4 +16,10 @@ class Favorite(models.Model):
         unique_together = ('user', 'film')  # Un utilizator poate adauga un film o singura data
         
         
-        #pana aici tot a fost adaugat de radu
+class ViewHistory(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    film = models.ForeignKey(Film, on_delete=models.CASCADE)  
+    viewed_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-viewed_at']

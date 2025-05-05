@@ -10,4 +10,5 @@ urlpatterns = [
     path('favorite/', views.lista_favorite, name='lista_favorite'),
     path('film/<int:film_id>/adauga-favorit/', views.adauga_favorit, name='adauga_favorit'),
     path('film/<int:film_id>/elimina-favorit/', views.elimina_favorit, name='elimina_favorit'),
+    path('istoric/', views.istoric_vizionari, name='istoric_vizionari'),
 ]

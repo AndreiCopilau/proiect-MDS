@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Istoric vizionări</title>
+    <style>
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .home-button {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        .home-button:hover {
+            background-color: #45a049;
+        }
+        .film-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 20px;
+        }
+        .film-item {
+            border: 1px solid #ddd;
+            padding: 15px;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Buton de "Acasă" -->
+        <a href="{% url 'home' %}" class="home-button">← Înapoi acasă</a>
+        
+        <h1>Istoricul tău de vizionări</h1>
+        
+        <div class="film-list">
+            {% for entry in istoric %}
+            <div class="film-item">
+                <img src="https://image.tmdb.org/t/p/w200{{ entry.film.poster_path }}" 
+                     alt="{{ entry.film.titlu }}"
+                     style="width:100%; border-radius:5px;">
+                <h3>{{ entry.film.titlu }}</h3>
+                <p><small>Vizionat la: {{ entry.viewed_at|date:"d M Y H:i" }}</small></p>
+                <a href="{% url 'detalii_film' entry.film.id_tmdb %}" 
+                   style="color:#4CAF50; text-decoration:none;">
+                   Vezi detalii
+                </a>
+            </div>
+            {% empty %}
+            <p>Nu ai vizionat încă niciun film.</p>
+            {% endfor %}
+        </div>
+    </div>
+</body>
+</html>

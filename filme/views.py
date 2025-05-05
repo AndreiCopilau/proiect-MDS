@@ -7,6 +7,8 @@ from django.contrib.auth import logout # type: ignore
 
 from django.shortcuts import get_object_or_404 #adaugat de radu
 from .models import Film, Favorite #adagat de radu
+from .models import ViewHistory  #adagat de radu
+from django.contrib.auth.decorators import login_required #adagat de radu
 
 def home(request):
     filme = get_filme_populare
@@ -15,21 +17,33 @@ def home(request):
 def detalii_film(request, film_id):
     film = get_detalii_film(film_id)
     user_favorite_ids = []
+    
     if request.user.is_authenticated:
+        # Verifică favorite
         user_favorite_ids = Favorite.objects.filter(
             user=request.user,
             film__id_tmdb=film_id
         ).values_list('film__id_tmdb', flat=True)
+        
+        # Obține sau creează filmul în baza noastră
+        film_obj, created = Film.objects.get_or_create(
+            id_tmdb=film_id,
+            defaults={
+                'titlu': film['title'],
+                'poster_path': film['poster_path']
+            }
+        )
+        
+        # Salvează vizionarea în istoric (folosind obiectul Film)
+        ViewHistory.objects.create(
+            user=request.user,
+            film=film_obj  # Folosim obiectul Film creat mai sus
+        )
     
     return render(request, 'filme/detalii_film.html', {
-        'film': film,
+        'film': film,  # Date din API
         'user_favorite_ids': user_favorite_ids
     })
-    #return render(request, 'filme/detalii_film.html', {'film': film})
-    # if film:
-    #     return render(request, 'filme/detalii_film.html', {'film': film})
-    # else:
-    #     return render(request, 'filme/eroare.html', {'mesaj': 'Filmul nu a fost gasit.'})
     
 def register(request):
     if request.method == 'POST':
@@ -101,3 +115,15 @@ def lista_favorite(request):
     
     favorite = Favorite.objects.filter(user=request.user).select_related('film')
     return render(request, 'filme/favorite.html', {'favorite': favorite})
+
+
+
+@login_required
+def istoric_vizionari(request):
+    istoric = ViewHistory.objects.filter(
+        user=request.user
+    ).select_related('film').order_by('-viewed_at')
+    
+    return render(request, 'filme/istoric.html', {
+        'istoric': istoric
+    })

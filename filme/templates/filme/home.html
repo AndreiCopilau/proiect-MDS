@@ -19,6 +19,10 @@
     <p><a href="{% url 'lista_favorite' %}">Vezi favoritele tale</a></p>
     {% endif %}
 
+    {% if user.is_authenticated %}
+    <a href="{% url 'istoric_vizionari' %}">Istoric vizionări</a>
+    {% endif %}
+
     <h3>Filme Populare</h3>
     {% for film in filme %}
         <div class="film">
