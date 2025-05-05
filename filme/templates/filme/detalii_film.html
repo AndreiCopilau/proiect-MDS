@@ -2,18 +2,58 @@
 <html>
 <head>
     <title>{{ film.title }}</title>
+    <style>
+        .film-container { max-width: 800px; margin: 0 auto; }
+        .film-poster { float: left; margin-right: 20px; }
+        .film-details { overflow: hidden; }
+        .button-favorite {
+            background-color: #ff6b6b;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        .button-favorite:hover { background-color: #ff5252; }
+    </style>
 </head>
 <body>
-    <a href="/">← Înapoi</a>
-    <h1>{{ film.title }}</h1>
-    <img src="https://image.tmdb.org/t/p/w300{{ film.poster_path }}" alt="{{ film.title }}">
-    <p><strong>Descriere:</strong> {{ film.overview }}</p>
-    <p><strong>An lansare:</strong> {{ film.release_date }}</p>
-    <p><strong>Genuri:</strong>
-        {% for gen in film.genres %}
-            {{ gen.name }}{% if not forloop.last %}, {% endif %}
-        {% endfor %}
-    </p>
-    <p><strong>Scor TMDB:</strong> {{ film.vote_average }}/10</p>
+    <div class="film-container">
+        <a href="/">← Înapoi</a>
+        
+        <div class="film-poster">
+            <img src="https://image.tmdb.org/t/p/w300{{ film.poster_path }}" alt="{{ film.title }}">
+        </div>
+        
+        <div class="film-details">
+            <h1>{{ film.title }}</h1>
+            
+            <!-- Butonul de favorite (modificat pentru a funcționa fără base.html) -->
+            {% if user.is_authenticated %}
+                {% if film.id in user_favorite_ids %}
+                    <form action="{% url 'elimina_favorit' film.id %}" method="post" style="display: inline;">
+                        {% csrf_token %}
+                        <button type="submit" class="button-favorite">★ Elimină din favorite</button>
+                    </form>
+                {% else %}
+                    <form action="{% url 'adauga_favorit' film.id %}" method="post" style="display: inline;">
+                        {% csrf_token %}
+                        <button type="submit" class="button-favorite">☆ Adaugă la favorite</button>
+                    </form>
+                {% endif %}
+            {% else %}
+                <p><a href="{% url 'login' %}?next={% url 'detalii_film' film.id %}">Autentifică-te</a> pentru a adăuga la favorite</p>
+            {% endif %}
+            
+            <p><strong>Descriere:</strong> {{ film.overview }}</p>
+            <p><strong>An lansare:</strong> {{ film.release_date }}</p>
+            <p><strong>Genuri:</strong>
+                {% for gen in film.genres %}
+                    {{ gen.name }}{% if not forloop.last %}, {% endif %}
+                {% endfor %}
+            </p>
+            <p><strong>Scor TMDB:</strong> {{ film.vote_average }}/10</p>
+        </div>
+    </div>
 </body>
 </html>

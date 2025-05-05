@@ -1,3 +1,6 @@
-from django.contrib import admin
+from django.contrib import admin  # Acesta este importul crucial
+from .models import Film, Favorite  # Importă modelele tale
 
-# Register your models here.
+# Înregistrează modelele pentru a fi vizibile în admin
+admin.site.register(Film)
+admin.site.register(Favorite)

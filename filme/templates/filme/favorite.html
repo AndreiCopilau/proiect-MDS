@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Filme Favorite</title>
+    <!-- Copiem stilurile din home.html pentru consistență -->
+    <style>
+        img { width: 200px; }
+        .film { 
+            display: inline-block; 
+            margin: 10px; 
+            text-align: center; 
+            width: 220px; 
+        }
+        .nav {
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar manual (copiat din home.html) -->
+    <div class="nav">
+        <a href="/">Acasă</a>
+        {% if user.is_authenticated %}
+            | <a href="{% url 'logout' %}">Deconectează-te</a>
+        {% else %}
+            | <a href="{% url 'login' %}">Autentifică-te</a> 
+            | <a href="{% url 'register' %}">Înregistrează-te</a>
+        {% endif %}
+    </div>
+
+    <h1>Filmele mele favorite</h1>
+    
+    {% if favorite %}
+        <div class="film-list">
+            {% for fav in favorite %}
+                <div class="film">
+                    <a href="{% url 'detalii_film' fav.film.id_tmdb %}">
+                        <img src="https://image.tmdb.org/t/p/w200{{ fav.film.poster_path }}" alt="{{ fav.film.titlu }}">
+                        <h3>{{ fav.film.titlu }}</h3>
+                    </a>
+                    <form action="{% url 'elimina_favorit' fav.film.id_tmdb %}" method="post">
+                        {% csrf_token %}
+                        <button type="submit">Șterge din favorite</button>
+                    </form>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p>Nu ai niciun film adăugat la favorite.</p>
+    {% endif %}
+</body>
+</html>
