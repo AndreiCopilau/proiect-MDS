@@ -124,3 +124,19 @@ STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 TMDB_API_KEY = '7c4f52f7a9bfd765ee2774bb2c1ca19c'
+
+AUTH_USER_MODEL = 'filme.UserCustom'
+
+ADMINS = [
+    ('Alex Florea', 'alexflorea177@gmail.com'),
+    ('Andrei Copilau', 'copilau.andrei@yahoo.com'),
+    ('Vasile Radu','raduv0211@gmail.com'),
+]
+SESSION_COOKIE_AGE = 86400  
+SESSION_EXPIRE_AT_BROWSER_CLOSE = False
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587 
+EMAIL_USE_TLS = True 
+EMAIL_HOST_USER = 'alexflorea177@gmail.com'
+EMAIL_HOST_PASSWORD = 'odjd lrfn wobx ecnm'
