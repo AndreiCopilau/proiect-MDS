@@ -23,6 +23,11 @@
     <a href="{% url 'istoric_vizionari' %}">Istoric vizionări</a>
     {% endif %}
 
+    <form method="GET" action="{% url 'cautare_filme' %}" style="margin: 20px 0;">
+        <input type="text" name="q" placeholder="Caută un film..." required style="padding: 5px; width: 200px;">
+        <button type="submit" style="padding: 5px 10px;">Caută</button>
+    </form>
+
     <h3>Filme Populare</h3>
     {% for film in filme %}
         <div class="film">

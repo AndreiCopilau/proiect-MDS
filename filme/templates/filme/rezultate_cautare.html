@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Rezultate Căutare</title>
+    <style>
+        img { width: 200px; }
+        .film { display: inline-block; margin: 10px; text-align: center; width: 220px; }
+    </style>
+</head>
+<body>
+    <h1>Rezultatele căutării pentru: "{{ query }}"</h1>
+
+    {% if rezultate %}
+        {% for film in rezultate %}
+            <div class="film">
+                <a href="{% url 'detalii_film' film.id %}">
+                    <img src="https://image.tmdb.org/t/p/w200{{ film.poster_path }}" alt="{{ film.title }}">
+                    <h3>{{ film.title }}</h3>
+                </a>
+                <p>An lansare: {{ film.release_date }}</p>
+            </div>
+        {% endfor %}
+    {% else %}
+        <p>Nu s-a găsit niciun film cu numele "{{ query }}".</p>
+    {% endif %}
+
+    <p><a href="{% url 'home' %}">Înapoi la home</a></p>
+</body>
+</html>

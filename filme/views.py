@@ -11,7 +11,7 @@ from .models import ViewHistory  #adagat de radu
 from django.contrib.auth.decorators import login_required #adagat de radu
 
 def home(request):
-    filme = get_filme_populare
+    filme = get_filme_populare()
     return render(request, 'filme/home.html', {'filme': filme})
 
 def detalii_film(request, film_id):
@@ -247,4 +247,23 @@ def istoric_vizionari(request):
     return render(request, 'filme/istoric.html', {
         'istoric': istoric
     })
+    
+from django.db.models import Q  # pentru căutare flexibilă
+
+from .utils import cauta_filme_tmdb
+
+def cautare_filme(request):
+    query = request.GET.get('q')
+    rezultate = []
+
+    if query:
+        rezultate = cauta_filme_tmdb(query)
+
+    return render(request, 'filme/rezultate_cautare.html', {
+        'rezultate': rezultate,
+        'query': query
+    })
+
+
+
     

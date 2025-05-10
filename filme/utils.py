@@ -14,3 +14,11 @@ def get_detalii_film(film_id):
     url = f"https://api.themoviedb.org/3/movie/{film_id}?api_key={settings.TMDB_API_KEY}&language=en-US"
     response = requests.get(url)
     return response.json() if response.status_code == 200 else None
+
+def cauta_filme_tmdb(query):
+    url = f"https://api.themoviedb.org/3/search/movie?api_key={settings.TMDB_API_KEY}&language=en-US&query={query}"
+    response = requests.get(url)
+    if response.status_code == 200:
+        data = response.json()
+        return data.get('results', [])
+    return []
