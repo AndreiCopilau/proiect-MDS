@@ -28,7 +28,6 @@
         <div class="film-details">
             <h1>{{ film.title }}</h1>
             
-            <!-- Butonul de favorite (modificat pentru a funcționa fără base.html) -->
             {% if user.is_authenticated %}
                 {% if film.id in user_favorite_ids %}
                     <form action="{% url 'elimina_favorit' film.id %}" method="post" style="display: inline;">
@@ -53,6 +52,15 @@
                 {% endfor %}
             </p>
             <p><strong>Scor TMDB:</strong> {{ film.vote_average }}/10</p>
+
+            <div style="margin-top: 20px; text-align: center;">
+                {% if trailer_url %}
+                    <h3>Trailer</h3>
+                    <iframe width="560" height="315" src="{{ trailer_url }}" frameborder="0" allowfullscreen></iframe>
+                {% else %}
+                    <p><em>Trailer indisponibil.</em></p>
+                {% endif %}
+            </div>
         </div>
     </div>
 </body>

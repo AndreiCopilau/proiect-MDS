@@ -13,4 +13,5 @@ urlpatterns = [
     path('istoric/', views.istoric_vizionari, name='istoric_vizionari'),
     path('confirma_mail/<str:cod>/', views.confirma_mail, name='confirma_mail'),
     path('cautare/', views.cautare_filme, name='cautare_filme'),
+    path('autocomplete', views.autocomplete_filme, name='autocomplete_filme'),
 ]

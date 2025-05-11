@@ -22,3 +22,13 @@ def cauta_filme_tmdb(query):
         data = response.json()
         return data.get('results', [])
     return []
+
+def get_video_film(film_id):
+    url = f"https://api.themoviedb.org/3/movie/{film_id}/videos?api_key={settings.TMDB_API_KEY}&language=en-US"
+    response = requests.get(url)
+    if response.status_code == 200:
+        videos = response.json().get('results', [])
+        for video in videos:
+            if video['site'] == 'YouTube' and video['type'] == 'Trailer':
+                return f"https://www.youtube.com/embed/{video['key']}"
+    return None

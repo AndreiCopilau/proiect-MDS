@@ -9,6 +9,7 @@ from django.shortcuts import get_object_or_404 #adaugat de radu
 from .models import Film, Favorite #adagat de radu
 from .models import ViewHistory  #adagat de radu
 from django.contrib.auth.decorators import login_required #adagat de radu
+from .utils import get_video_film
 
 def home(request):
     filme = get_filme_populare()
@@ -40,9 +41,12 @@ def detalii_film(request, film_id):
             film=film_obj  # Folosim obiectul Film creat mai sus
         )
     
+    trailer_url = get_video_film(film_id)
+
     return render(request, 'filme/detalii_film.html', {
         'film': film,  # Date din API
-        'user_favorite_ids': user_favorite_ids
+        'user_favorite_ids': user_favorite_ids,
+        'trailer_url': trailer_url  # nou!
     })
     
 # def register(request):
@@ -262,6 +266,20 @@ def cautare_filme(request):
     return render(request, 'filme/rezultate_cautare.html', {
         'rezultate': rezultate,
         'query': query
+    })
+
+from django.http import JsonResponse
+def autocomplete_filme(request):
+    query = request.GET.get('q', '')
+    if not query:
+        return JsonResponse({'results': []})
+    
+    rezultate = cauta_filme_tmdb(query)  # aici
+    return JsonResponse({
+        'results': [
+            {'id': film['id'], 'title': film['title']}
+            for film in rezultate[:5]
+        ]
     })
 
 
