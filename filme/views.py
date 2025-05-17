@@ -11,9 +11,9 @@ from .models import ViewHistory  #adagat de radu
 from django.contrib.auth.decorators import login_required #adagat de radu
 from .utils import get_video_film
 
-def home(request):
-    filme = get_filme_populare()
-    return render(request, 'filme/home.html', {'filme': filme})
+# def home(request):
+#     filme = get_filme_populare()
+#     return render(request, 'filme/home.html', {'filme': filme})
 
 def detalii_film(request, film_id):
     film = get_detalii_film(film_id)
@@ -256,17 +256,53 @@ from django.db.models import Q  # pentru căutare flexibilă
 
 from .utils import cauta_filme_tmdb
 
-def cautare_filme(request):
-    query = request.GET.get('q')
-    rezultate = []
+# def cautare_filme(request):
+#     query = request.GET.get('q')
+#     rezultate = []
 
-    if query:
-        rezultate = cauta_filme_tmdb(query)
+#     if query:
+#         rezultate = cauta_filme_tmdb(query)
 
-    return render(request, 'filme/rezultate_cautare.html', {
-        'rezultate': rezultate,
-        'query': query
-    })
+#     return render(request, 'filme/rezultate_cautare.html', {
+#         'rezultate': rezultate,
+#         'query': query
+#     })
+
+
+# def cautare_filme(request):
+#     query = request.GET.get('q', '')
+#     min_rating = request.GET.get('min_rating')
+#     gen = request.GET.get('gen')
+
+#     genuri = obtine_genuri_tmdb()
+#     rezultate = []
+
+#     if query or min_rating or gen:
+#         rezultate = cauta_filme_tmdb(query or '')
+
+#         if min_rating:
+#             try:
+#                 min_rating = float(min_rating)
+#                 rezultate = [film for film in rezultate if film.get('vote_average', 0) >= min_rating]
+#             except ValueError:
+#                 pass
+
+#         if gen:
+#             try:
+#                 gen_id = int(gen)
+#                 rezultate = [film for film in rezultate if gen_id in film.get('genre_ids', [])]
+#             except ValueError:
+#                 pass
+
+#     context = {
+#         'rezultate': rezultate,
+#         'query': query,
+#         'genuri': genuri,
+#         'selected_gen': gen,
+#         'min_rating': min_rating,
+#     }
+#     return render(request, 'filme/rezultate_cautare.html', context)
+
 
 from django.http import JsonResponse
 def autocomplete_filme(request):
@@ -282,6 +318,76 @@ def autocomplete_filme(request):
         ]
     })
 
+import requests
+def obtine_genuri_tmdb():
+    url = 'https://api.themoviedb.org/3/genre/movie/list'
+    params = {
+        'api_key': '7c4f52f7a9bfd765ee2774bb2c1ca19c',
+        'language': 'ro-RO'  # sau 'en-US'
+    }
+    response = requests.get(url, params=params)
+    if response.status_code == 200:
+        return response.json().get('genres', [])
+    return []
 
+def cauta_filme(query):
+    url = f"https://api.themoviedb.org/3/search/movie"
+    params = {
+        'api_key': settings.TMDB_API_KEY,
+        'language': 'ro-RO',
+        'query': query
+    }
+    response = requests.get(url, params=params)
+    if response.status_code == 200:
+        return response.json().get('results', [])
+    return []
 
-    
+def filme_populare_tmdb():
+    url = f"https://api.themoviedb.org/3/movie/popular"
+    params = {
+        'api_key': settings.TMDB_API_KEY,
+        'language': 'ro-RO'
+    }
+    response = requests.get(url, params=params)
+    if response.status_code == 200:
+        return response.json().get('results', [])
+    return []
+
+def home(request):
+    query = request.GET.get('q', '')
+    min_rating = request.GET.get('min_rating')
+    gen = request.GET.get('gen')
+
+    genuri = obtine_genuri_tmdb()
+    filme = []
+
+    # Dacă există query (titlu căutat), caută în TMDB
+    if query:
+        filme = cauta_filme_tmdb(query)
+    else:
+        # Altfel, încarcă lista de filme populare
+        filme = filme_populare_tmdb()
+
+    # Filtrare suplimentară (rating și gen)
+    if min_rating:
+        try:
+            min_rating = float(min_rating)
+            filme = [f for f in filme if f.get('vote_average', 0) >= min_rating]
+        except ValueError:
+            pass
+
+    if gen:
+        try:
+            gen_id = int(gen)
+            filme = [f for f in filme if gen_id in f.get('genre_ids', [])]
+        except ValueError:
+            pass
+
+    context = {
+        'filme': filme,
+        'genuri': genuri,
+        'query': query,
+        'min_rating': min_rating,
+        'gen_selectat': gen
+    }
+    return render(request, 'filme/home.html', context)

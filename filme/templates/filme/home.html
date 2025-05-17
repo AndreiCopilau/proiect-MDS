@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+{% comment %} <!DOCTYPE html>
 <html>
 <head>
     <title>Filme Populare</title>
@@ -48,7 +48,7 @@
         input.addEventListener('input', function () {
             const query = input.value;
             if (query.length < 2) {
-             suggestionsBox.innerHTML = '';
+                suggestionsBox.innerHTML = '';
                 return;
             }
 
@@ -72,5 +72,146 @@
     });
     </script>
 
+</body>
+</html> {% endcomment %}
+
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Filme Populare</title>
+    <style>
+        img { width: 200px; }
+        .film { display: inline-block; margin: 10px; text-align: center; width: 220px; }
+    </style>
+</head>
+<body>
+    <h1>Recomandari pe Banda</h1> 
+
+    {% if user.is_authenticated %}
+        <p>Bun venit, {{ user.username }}! <a href="{% url 'logout' %}">Deconectează-te</a></p>
+        <p><a href="{% url 'lista_favorite' %}">Vezi favoritele tale</a></p>
+        <a href="{% url 'istoric_vizionari' %}">Istoric vizionări</a>
+    {% else %}
+        <p><a href="{% url 'login' %}">Autentifică-te</a> | <a href="{% url 'register' %}">Înregistrează-te</a></p>
+    {% endif %}
+
+    <!-- FORMULAR DE FILTRARE -->
+    <form method="GET" action="{% url 'home' %}" style="margin: 20px 0;">
+        <div style="display: flex; flex-wrap: wrap; gap: 15px; align-items: end;">
+            <!-- Căutare titlu -->
+            <div style="position: relative;">
+                <label for="search-input">Titlu film</label><br>
+                <input 
+                    type="text" 
+                    id="search-input" 
+                    name="q" 
+                    placeholder="Ex: Batman" 
+                    value="{{ request.GET.q }}" 
+                    style="padding: 5px; width: 200px;" 
+                    autocomplete="off">
+                <div id="suggestions" style="position: absolute; background: white; border: 1px solid #ccc; width: 200px; z-index: 1000;"></div>
+            </div>
+
+            <!-- Select gen -->
+            <div>
+                <label for="gen">Gen</label><br>
+                <select id="gen" name="gen" style="padding: 5px; width: 180px;">
+                    <option value="">Toate genurile</option>
+                    {% for g in genuri %}
+                        {% comment %} <option value="{{ g.id }}" {% if request.GET.gen == g.id|stringformat:"s" %}selected{% endif %}>{{ g.name }}</option> {% endcomment %}
+                        <option value="{{ g.id }}" {% if gen_selectat|stringformat:"s" == g.id|stringformat:"s" %}selected{% endif %}>{{ g.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Rating minim -->
+            <div>
+                <label for="min_rating">Rating minim</label><br>
+                <input 
+                    type="number" 
+                    name="min_rating" 
+                    id="min_rating" 
+                    step="0.1" 
+                    min="0" 
+                    max="10" 
+                    placeholder="Ex: 7.5" 
+                    style="padding: 5px; width: 100px;" 
+                    value="{{ request.GET.min_rating }}">
+            </div>
+
+            <!-- Butoane -->
+            <div>
+                <button type="submit" style="padding: 5px 15px;">Filtrează</button>
+                <a href="{% url 'home' %}" style="padding: 5px 10px; text-decoration: none; border: 1px solid gray; background: #eee;">Resetează</a>
+            </div>
+        </div>
+    </form>
+
+    {% comment %} <h3>Filme Populare</h3>
+    {% for film in filme %}
+        <div class="film">
+            <a href="{% url 'detalii_film' film.id %}">
+                <img src="https://image.tmdb.org/t/p/w200{{ film.poster_path }}" alt="{{ film.title }}">
+                <h3>{{ film.title }}</h3>
+            </a>
+            <p>Data lansare: {{ film.release_date }}</p>
+        </div>
+    {% endfor %} {% endcomment %}
+
+    <h3>
+    {% if request.GET.q or request.GET.min_rating or request.GET.gen %}
+        Rezultatele căutării:
+    {% else %}
+        Filme Populare
+    {% endif %}
+    </h3>
+    
+    {% if filme %}
+        {% for film in filme %}
+            <div class="film">
+                <a href="{% url 'detalii_film' film.id %}">
+                    <img src="https://image.tmdb.org/t/p/w200{{ film.poster_path }}" alt="{{ film.title }}">
+                    <h3>{{ film.title }}</h3>
+                </a>
+                <p>Data lansare: {{ film.release_date }}</p>
+            </div>
+        {% endfor %}
+    {% else %}
+        <p>Nu s-au găsit filme care să corespundă filtrului ales.</p>
+    {% endif %}
+
+    <!-- SCRIPT AUTOCOMPLETE -->
+    <script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const input = document.getElementById('search-input');
+        const suggestionsBox = document.getElementById('suggestions');
+
+        input.addEventListener('input', function () {
+            const query = input.value;
+            if (query.length < 2) {
+                suggestionsBox.innerHTML = '';
+                return;
+            }
+
+            fetch(`/autocomplete?q=${encodeURIComponent(query)}`)
+                .then(response => response.json())
+                .then(data => {
+                    suggestionsBox.innerHTML = '';
+                    data.results.slice(0, 3).forEach(film => {
+                        const div = document.createElement('div');
+                        div.innerHTML = `<a href="/film/${film.id}/" style="display:block; padding: 5px; text-decoration:none;">${film.title}</a>`;
+                        suggestionsBox.appendChild(div);
+                    });
+                });
+        });
+
+        document.addEventListener('click', function (e) {
+            if (!suggestionsBox.contains(e.target) && e.target !== input) {
+                suggestionsBox.innerHTML = '';
+            }
+        });
+    });
+    </script>
 </body>
 </html>
