@@ -189,6 +189,24 @@
         <p>Nu s-au găsit filme care să corespundă filtrului ales.</p>
     {% endif %}
 
+    {% comment %} folosit pentru paginare {% endcomment %}
+    {% comment %} {% if total_pagini > 1 %}
+    <div style="margin-top: 20px;">
+        <p>Pagina {{ pagina_curenta }} din {{ total_pagini }}</p>
+        <div style="display: flex; gap: 10px;">
+            {% if pagina_curenta > 1 %}
+                <a href="?q={{ query }}&min_rating={{ min_rating }}&gen={{ gen }}&page={{ pagina_curenta|add:'-1' }}">« Anterior</a>
+            {% endif %}
+
+            {% if pagina_curenta < total_pagini %}
+                <a href="?q={{ query }}&min_rating={{ min_rating }}&gen={{ gen }}&page={{ pagina_curenta|add:'1' }}">Următor »</a>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %} {% endcomment %}
+
+
+
     <!-- SCRIPT AUTOCOMPLETE -->
     <script>
     document.addEventListener('DOMContentLoaded', function () {

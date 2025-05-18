@@ -353,41 +353,90 @@ def filme_populare_tmdb():
         return response.json().get('results', [])
     return []
 
+# def home(request):
+#     query = request.GET.get('q', '')
+#     min_rating = request.GET.get('min_rating')
+#     gen = request.GET.get('gen')
+
+#     genuri = obtine_genuri_tmdb()
+#     filme = []
+
+#     # Dacă există query (titlu căutat), caută în TMDB
+#     if query:
+#         filme = cauta_filme_tmdb(query)
+#     else:
+#         # Altfel, încarcă lista de filme populare
+#         filme = filme_populare_tmdb()
+
+#     # Filtrare suplimentară (rating și gen)
+#     if min_rating:
+#         try:
+#             min_rating = float(min_rating)
+#             filme = [f for f in filme if f.get('vote_average', 0) >= min_rating]
+#         except ValueError:
+#             pass
+
+#     if gen:
+#         try:
+#             gen_id = int(gen)
+#             filme = [f for f in filme if gen_id in f.get('genre_ids', [])]
+#         except ValueError:
+#             pass
+
+#     context = {
+#         'filme': filme,
+#         'genuri': genuri,
+#         'query': query,
+#         'min_rating': min_rating,
+#         'gen_selectat': gen
+#     }
+#     return render(request, 'filme/home.html', context)
+
+from .utils import descopera_filme_tmdb
+
 def home(request):
-    query = request.GET.get('q', '')
+    query = request.GET.get('q', '').strip()
     min_rating = request.GET.get('min_rating')
     gen = request.GET.get('gen')
+    pagina = int(request.GET.get('page', '1'))
 
     genuri = obtine_genuri_tmdb()
     filme = []
+    pagina_curenta = pagina
+    total_pagini = 1
 
-    # Dacă există query (titlu căutat), caută în TMDB
     if query:
-        filme = cauta_filme_tmdb(query)
+        rezultat = cauta_filme_tmdb(query, pagina=pagina)
+        filme = rezultat['filme']
+        pagina_curenta = rezultat['pagina_curenta']
+        total_pagini = rezultat['total_pagini']
+        if min_rating:
+            try:
+                filme = [f for f in filme if f.get('vote_average', 0) >= float(min_rating)]
+            except ValueError:
+                pass
+        if gen:
+            try:
+                gen_id = int(gen)
+                filme = [f for f in filme if gen_id in f.get('genre_ids', [])]
+            except ValueError:
+                pass
+    elif gen or min_rating:
+        rezultat = descopera_filme_tmdb(gen=gen, min_rating=min_rating, pagina=pagina)
+        filme = rezultat['filme']
+        pagina_curenta = rezultat['pagina_curenta']
+        total_pagini = rezultat['total_pagini']
     else:
-        # Altfel, încarcă lista de filme populare
         filme = filme_populare_tmdb()
-
-    # Filtrare suplimentară (rating și gen)
-    if min_rating:
-        try:
-            min_rating = float(min_rating)
-            filme = [f for f in filme if f.get('vote_average', 0) >= min_rating]
-        except ValueError:
-            pass
-
-    if gen:
-        try:
-            gen_id = int(gen)
-            filme = [f for f in filme if gen_id in f.get('genre_ids', [])]
-        except ValueError:
-            pass
 
     context = {
         'filme': filme,
         'genuri': genuri,
         'query': query,
         'min_rating': min_rating,
-        'gen_selectat': gen
+        'gen_selectat': gen,
+        'pagina_curenta': pagina_curenta,
+        'total_pagini': total_pagini,
     }
     return render(request, 'filme/home.html', context)
+
