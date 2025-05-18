@@ -79,10 +79,18 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Filme Populare</title>
+    <title>Recomandari pe Banda</title>
     <style>
         img { width: 200px; }
         .film { display: inline-block; margin: 10px; text-align: center; width: 220px; }
+        a {
+            text-decoration: none;
+            color: blue;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
     </style>
 </head>
 <body>
@@ -166,7 +174,7 @@
         Filme Populare
     {% endif %}
     </h3>
-    
+
     {% if filme %}
         {% for film in filme %}
             <div class="film">
@@ -213,5 +221,11 @@
         });
     });
     </script>
+
+    {% if user.is_authenticated %}
+    <footer style="position: fixed; bottom: 0; width: 100%; background: #f2f2f2; text-align: center; padding: 10px; border-top: 1px solid #ccc;">
+        Bună, {{ user.username }}!
+    </footer>
+    {% endif %}
 </body>
 </html>
