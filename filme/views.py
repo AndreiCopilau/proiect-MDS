@@ -11,9 +11,6 @@ from .models import ViewHistory  #adagat de radu
 from django.contrib.auth.decorators import login_required #adagat de radu
 from .utils import get_video_film
 
-# def home(request):
-#     filme = get_filme_populare()
-#     return render(request, 'filme/home.html', {'filme': filme})
 
 def detalii_film(request, film_id):
     film = get_detalii_film(film_id)
@@ -49,7 +46,7 @@ def detalii_film(request, film_id):
         'trailer_url': trailer_url  # nou!
     })
 
-    
+
 from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.core.mail import mail_admins
@@ -173,7 +170,6 @@ def confirma_mail(request, cod):
 
 
 #adaugat de radu
-
 def adauga_favorit(request, film_id):
     if not request.user.is_authenticated:
         return redirect('login')
@@ -209,14 +205,27 @@ def lista_favorite(request):
 
 
 
+# @login_required
+# def istoric_vizionari(request):
+#     istoric = ViewHistory.objects.filter(
+#         user=request.user
+#     ).select_related('film').order_by('-viewed_at')
+    
+#     return render(request, 'filme/istoric.html', {
+#         'istoric': istoric
+#     })
+
+# Afiseaza filmele vizionate doar o singura data
 @login_required
 def istoric_vizionari(request):
-    istoric = ViewHistory.objects.filter(
-        user=request.user
-    ).select_related('film').order_by('-viewed_at')
-    
+    filme_vizionate = (
+        Film.objects
+        .filter(viewhistory__user=request.user)
+        .distinct()
+    )
+
     return render(request, 'filme/istoric.html', {
-        'istoric': istoric
+        'istoric': [{'film': f, 'viewed_at': None} for f in filme_vizionate]
     })
     
 from django.db.models import Q  # pentru căutare flexibilă
