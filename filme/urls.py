@@ -14,4 +14,6 @@ urlpatterns = [
     path('confirma_mail/<str:cod>/', views.confirma_mail, name='confirma_mail'),
     path('cautare/', views.cauta_filme, name='cautare_filme'),
     path('autocomplete', views.autocomplete_filme, name='autocomplete_filme'),
+    path('recomandari/', views.recomandari_view, name='recomandari'),
+
 ]

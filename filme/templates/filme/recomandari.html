@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+    <meta charset="UTF-8">
+    <title>Recomandări pentru tine</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+        h2 {
+            text-align: center;
+        }
+        .grid {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 30px;
+        }
+        .film {
+            width: 200px;
+            text-align: center;
+        }
+        .film img {
+            width: 100%;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        .btn-back {
+            display: inline-block;
+            margin: 15px auto;
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            text-align: center;
+        }
+        .btn-back:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+
+    <h2>🎯 Recomandări pentru tine</h2>
+
+    <div style="text-align: center;">
+        <a href="{% url 'home' %}" class="btn-back">⏪ Înapoi la pagina principală</a>
+    </div>
+
+    {% if recomandari %}
+        <div class="grid">
+            {% for film in recomandari %}
+                <div class="film">
+                    <a href="{% url 'detalii_film' film.id %}">
+                        <img src="https://image.tmdb.org/t/p/w200{{ film.poster_path }}" alt="{{ film.title }}">
+                        <h4>{{ film.title }}</h4>
+                    </a>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p style="text-align: center;">Nu am suficiente date pentru a genera recomandări. Vizualizează mai întâi câteva filme!</p>
+    {% endif %}
+
+</body>
+</html>

@@ -48,40 +48,7 @@ def detalii_film(request, film_id):
         'user_favorite_ids': user_favorite_ids,
         'trailer_url': trailer_url  # nou!
     })
-    
-# def register(request):
-#     if request.method == 'POST':
-#         form = UserCreationForm(request.POST)
-#         if form.is_valid():
-#             # username = form.cleaned_data.get('username')
-#             # password = form.cleaned_data.get('password1')
-#             # user = authenticate(username=username, password=password)
-#             # login(request, user)
-#             # return render(request, 'filme/home.html', {'mesaj': 'Cont creat cu succes!'})
-#             user = form.save()  # creează utilizatorul
-#             login(request, user)  # îl conectează direct
-#             return redirect('home')
-#     else:
-#         form = UserCreationForm()
-#     return render(request, 'filme/register.html', {'form': form})  
 
-# def user_login(request):
-#     if request.method == 'POST':
-#         username = request.POST.get('username')
-#         password = request.POST.get('password')
-#         user = authenticate(request, username=username, password=password)
-#         if user is not None:
-#             login(request, user)
-#             # return render(request, 'filme/home.html', {'mesaj': 'Te-ai conectat cu succes!'})
-#             return redirect('home')
-#         else:
-#             return render(request, 'filme/login.html', {'mesaj': 'Username sau parola gresita!'})
-#     return render(request, 'filme/login.html')  
-
-# def user_logout(request):
-#     logout(request)
-#     return redirect('home')
-    # return render(request, 'filme/home.html', {'mesaj': 'Te-ai deconectat cu succes!'})
     
 from django.shortcuts import render, redirect
 from django.contrib import messages
@@ -253,68 +220,20 @@ def istoric_vizionari(request):
     })
     
 from django.db.models import Q  # pentru căutare flexibilă
-
 from .utils import cauta_filme_tmdb
-
-# def cautare_filme(request):
-#     query = request.GET.get('q')
-#     rezultate = []
-
-#     if query:
-#         rezultate = cauta_filme_tmdb(query)
-
-#     return render(request, 'filme/rezultate_cautare.html', {
-#         'rezultate': rezultate,
-#         'query': query
-#     })
-
-
-# def cautare_filme(request):
-#     query = request.GET.get('q', '')
-#     min_rating = request.GET.get('min_rating')
-#     gen = request.GET.get('gen')
-
-#     genuri = obtine_genuri_tmdb()
-#     rezultate = []
-
-#     if query or min_rating or gen:
-#         rezultate = cauta_filme_tmdb(query or '')
-
-#         if min_rating:
-#             try:
-#                 min_rating = float(min_rating)
-#                 rezultate = [film for film in rezultate if film.get('vote_average', 0) >= min_rating]
-#             except ValueError:
-#                 pass
-
-#         if gen:
-#             try:
-#                 gen_id = int(gen)
-#                 rezultate = [film for film in rezultate if gen_id in film.get('genre_ids', [])]
-#             except ValueError:
-#                 pass
-
-#     context = {
-#         'rezultate': rezultate,
-#         'query': query,
-#         'genuri': genuri,
-#         'selected_gen': gen,
-#         'min_rating': min_rating,
-#     }
-#     return render(request, 'filme/rezultate_cautare.html', context)
-
-
 from django.http import JsonResponse
 def autocomplete_filme(request):
-    query = request.GET.get('q', '')
+    query = request.GET.get('q', '').strip()
     if not query:
         return JsonResponse({'results': []})
-    
-    rezultate = cauta_filme_tmdb(query)  # aici
+
+    rezultat = cauta_filme_tmdb(query)
+    filme = rezultat.get('filme', [])  # ✅ obții lista din dict
+
     return JsonResponse({
         'results': [
             {'id': film['id'], 'title': film['title']}
-            for film in rezultate[:5]
+            for film in filme[:5]
         ]
     })
 
@@ -353,46 +272,8 @@ def filme_populare_tmdb():
         return response.json().get('results', [])
     return []
 
-# def home(request):
-#     query = request.GET.get('q', '')
-#     min_rating = request.GET.get('min_rating')
-#     gen = request.GET.get('gen')
-
-#     genuri = obtine_genuri_tmdb()
-#     filme = []
-
-#     # Dacă există query (titlu căutat), caută în TMDB
-#     if query:
-#         filme = cauta_filme_tmdb(query)
-#     else:
-#         # Altfel, încarcă lista de filme populare
-#         filme = filme_populare_tmdb()
-
-#     # Filtrare suplimentară (rating și gen)
-#     if min_rating:
-#         try:
-#             min_rating = float(min_rating)
-#             filme = [f for f in filme if f.get('vote_average', 0) >= min_rating]
-#         except ValueError:
-#             pass
-
-#     if gen:
-#         try:
-#             gen_id = int(gen)
-#             filme = [f for f in filme if gen_id in f.get('genre_ids', [])]
-#         except ValueError:
-#             pass
-
-#     context = {
-#         'filme': filme,
-#         'genuri': genuri,
-#         'query': query,
-#         'min_rating': min_rating,
-#         'gen_selectat': gen
-#     }
-#     return render(request, 'filme/home.html', context)
-
 from .utils import descopera_filme_tmdb
+from django.core.paginator import Paginator
 
 def home(request):
     query = request.GET.get('q', '').strip()
@@ -429,14 +310,23 @@ def home(request):
     else:
         filme = filme_populare_tmdb()
 
+    paginator = Paginator(filme, 4)
+    pagina_django = request.GET.get('p')  # "p" pentru paginarea locală
+    page_obj = paginator.get_page(pagina_django)
+
     context = {
-        'filme': filme,
+        'filme': page_obj.object_list,
         'genuri': genuri,
         'query': query,
         'min_rating': min_rating,
         'gen_selectat': gen,
         'pagina_curenta': pagina_curenta,
         'total_pagini': total_pagini,
-    }
+        'page_obj': page_obj,   }
     return render(request, 'filme/home.html', context)
 
+from .utils import recomandari_pe_genuri
+@login_required
+def recomandari_view(request):
+    recomandari = recomandari_pe_genuri(request.user)
+    return render(request, 'filme/recomandari.html', {'recomandari': recomandari})

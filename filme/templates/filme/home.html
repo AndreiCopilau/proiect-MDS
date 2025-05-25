@@ -1,81 +1,3 @@
-{% comment %} <!DOCTYPE html>
-<html>
-<head>
-    <title>Filme Populare</title>
-    <style>
-        img { width: 200px; }
-        .film { display: inline-block; margin: 10px; text-align: center; width: 220px; }
-    </style>
-</head>
-<body>
-    <h1>Recomandari pe Banda</h1> 
-    {% if user.is_authenticated %}
-        <p>Bun venit, {{ user.username }}! <a href="{% url 'logout' %}">Deconectează-te</a></p>
-    {% else %}
-        <p><a href="{% url 'login' %}">Autentifică-te</a> | <a href="{% url 'register' %}">Înregistrează-te</a></p>
-    {% endif %}
-
-    {% if user.is_authenticated %}
-    <p><a href="{% url 'lista_favorite' %}">Vezi favoritele tale</a></p>
-    {% endif %}
-
-    {% if user.is_authenticated %}
-    <a href="{% url 'istoric_vizionari' %}">Istoric vizionări</a>
-    {% endif %}
-
-    <form method="GET" action="{% url 'cautare_filme' %}" style="margin: 20px 0; position: relative;">
-        <input type="text" id="search-input" name="q" placeholder="Caută un film..." required style="padding: 5px; width: 200px;" autocomplete="off">
-        <button type="submit" style="padding: 5px 10px;">Caută</button>
-        <div id="suggestions" style="position: absolute; background: white; border: 1px solid #ccc; width: 200px; z-index: 1000;"></div>
-    </form>
-
-
-    <h3>Filme Populare</h3>
-    {% for film in filme %}
-        <div class="film">
-            <a href="{% url 'detalii_film' film.id %}">
-                <img src="https://image.tmdb.org/t/p/w200{{ film.poster_path }}" alt="{{ film.title }}">
-                <h3>{{ film.title }}</h3>
-            </a>
-            <p>Data lansare: {{ film.release_date}}</p>
-        </div>
-    {% endfor %}
-    <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        const input = document.getElementById('search-input');
-        const suggestionsBox = document.getElementById('suggestions');
-
-        input.addEventListener('input', function () {
-            const query = input.value;
-            if (query.length < 2) {
-                suggestionsBox.innerHTML = '';
-                return;
-            }
-
-            fetch(`/autocomplete?q=${encodeURIComponent(query)}`)
-                .then(response => response.json())
-                .then(data => {
-                    suggestionsBox.innerHTML = '';
-                    data.results.slice(0, 3).forEach(film => {
-                        const div = document.createElement('div');
-                        div.innerHTML = `<a href="/film/${film.id}/" style="display:block; padding: 5px; text-decoration:none;">${film.title}</a>`;
-                        suggestionsBox.appendChild(div);
-                    });
-                });
-        });
-
-        document.addEventListener('click', function (e) {
-            if (!suggestionsBox.contains(e.target) && e.target !== input) {
-                suggestionsBox.innerHTML = '';
-            }
-        });
-    });
-    </script>
-
-</body>
-</html> {% endcomment %}
-
-
 <!DOCTYPE html>
 <html>
 <head>
@@ -83,13 +5,19 @@
     <style>
         img { width: 200px; }
         .film { display: inline-block; margin: 10px; text-align: center; width: 220px; }
-        a {
+        a { text-decoration: none; color: blue; }
+        a:hover { text-decoration: underline; }
+        .btn-recomandari {
+            display: inline-block;
+            margin-top: 10px;
+            padding: 8px 15px;
+            background-color: #007bff;
+            color: white;
+            border-radius: 5px;
             text-decoration: none;
-            color: blue;
         }
-
-        a:hover {
-            text-decoration: underline;
+        .btn-recomandari:hover {
+            background-color: #0056b3;
         }
     </style>
 </head>
@@ -100,6 +28,9 @@
         <p>Bun venit, {{ user.username }}! <a href="{% url 'logout' %}">Deconectează-te</a></p>
         <p><a href="{% url 'lista_favorite' %}">Vezi favoritele tale</a></p>
         <a href="{% url 'istoric_vizionari' %}">Istoric vizionări</a>
+
+        <!-- 🔥 Buton spre Recomandări -->
+        <p><a href="{% url 'recomandari' %}" class="btn-recomandari">Vezi recomandări pentru tine</a></p>
     {% else %}
         <p><a href="{% url 'login' %}">Autentifică-te</a> | <a href="{% url 'register' %}">Înregistrează-te</a></p>
     {% endif %}
@@ -107,48 +38,26 @@
     <!-- FORMULAR DE FILTRARE -->
     <form method="GET" action="{% url 'home' %}" style="margin: 20px 0;">
         <div style="display: flex; flex-wrap: wrap; gap: 15px; align-items: end;">
-            <!-- Căutare titlu -->
             <div style="position: relative;">
                 <label for="search-input">Titlu film</label><br>
-                <input 
-                    type="text" 
-                    id="search-input" 
-                    name="q" 
-                    placeholder="Ex: Batman" 
-                    value="{{ request.GET.q }}" 
-                    style="padding: 5px; width: 200px;" 
-                    autocomplete="off">
+                <input type="text" id="search-input" name="q" placeholder="Ex: Batman"
+                       value="{{ request.GET.q }}" style="padding: 5px; width: 200px;" autocomplete="off">
                 <div id="suggestions" style="position: absolute; background: white; border: 1px solid #ccc; width: 200px; z-index: 1000;"></div>
             </div>
-
-            <!-- Select gen -->
             <div>
                 <label for="gen">Gen</label><br>
                 <select id="gen" name="gen" style="padding: 5px; width: 180px;">
                     <option value="">Toate genurile</option>
                     {% for g in genuri %}
-                        {% comment %} <option value="{{ g.id }}" {% if request.GET.gen == g.id|stringformat:"s" %}selected{% endif %}>{{ g.name }}</option> {% endcomment %}
                         <option value="{{ g.id }}" {% if gen_selectat|stringformat:"s" == g.id|stringformat:"s" %}selected{% endif %}>{{ g.name }}</option>
                     {% endfor %}
                 </select>
             </div>
-
-            <!-- Rating minim -->
             <div>
                 <label for="min_rating">Rating minim</label><br>
-                <input 
-                    type="number" 
-                    name="min_rating" 
-                    id="min_rating" 
-                    step="0.1" 
-                    min="0" 
-                    max="10" 
-                    placeholder="Ex: 7.5" 
-                    style="padding: 5px; width: 100px;" 
-                    value="{{ request.GET.min_rating }}">
+                <input type="number" name="min_rating" id="min_rating" step="0.1" min="0" max="10"
+                       placeholder="Ex: 7.5" style="padding: 5px; width: 100px;" value="{{ request.GET.min_rating }}">
             </div>
-
-            <!-- Butoane -->
             <div>
                 <button type="submit" style="padding: 5px 15px;">Filtrează</button>
                 <a href="{% url 'home' %}" style="padding: 5px 10px; text-decoration: none; border: 1px solid gray; background: #eee;">Resetează</a>
@@ -156,27 +65,16 @@
         </div>
     </form>
 
-    {% comment %} <h3>Filme Populare</h3>
-    {% for film in filme %}
-        <div class="film">
-            <a href="{% url 'detalii_film' film.id %}">
-                <img src="https://image.tmdb.org/t/p/w200{{ film.poster_path }}" alt="{{ film.title }}">
-                <h3>{{ film.title }}</h3>
-            </a>
-            <p>Data lansare: {{ film.release_date }}</p>
-        </div>
-    {% endfor %} {% endcomment %}
-
     <h3>
-    {% if request.GET.q or request.GET.min_rating or request.GET.gen %}
-        Rezultatele căutării:
-    {% else %}
-        Filme Populare
-    {% endif %}
+        {% if request.GET.q or request.GET.min_rating or request.GET.gen %}
+            Rezultatele căutării:
+        {% else %}
+            Filme Populare
+        {% endif %}
     </h3>
 
-    {% if filme %}
-        {% for film in filme %}
+    {% if page_obj %}
+        {% for film in page_obj %}
             <div class="film">
                 <a href="{% url 'detalii_film' film.id %}">
                     <img src="https://image.tmdb.org/t/p/w200{{ film.poster_path }}" alt="{{ film.title }}">
@@ -189,59 +87,56 @@
         <p>Nu s-au găsit filme care să corespundă filtrului ales.</p>
     {% endif %}
 
-    {% comment %} folosit pentru paginare {% endcomment %}
-    {% comment %} {% if total_pagini > 1 %}
-    <div style="margin-top: 20px;">
-        <p>Pagina {{ pagina_curenta }} din {{ total_pagini }}</p>
-        <div style="display: flex; gap: 10px;">
-            {% if pagina_curenta > 1 %}
-                <a href="?q={{ query }}&min_rating={{ min_rating }}&gen={{ gen }}&page={{ pagina_curenta|add:'-1' }}">« Anterior</a>
+    {% if page_obj.paginator.num_pages > 1 %}
+    <div style="margin-top: 20px; text-align: center;">
+        <p>Pagina {{ page_obj.number }} din {{ page_obj.paginator.num_pages }}</p>
+        <div style="display: flex; justify-content: center; gap: 10px;">
+            {% if page_obj.has_previous %}
+                <a href="?q={{ request.GET.q }}&min_rating={{ request.GET.min_rating }}&gen={{ request.GET.gen }}&p={{ page_obj.previous_page_number }}">« Anterior</a>
             {% endif %}
 
-            {% if pagina_curenta < total_pagini %}
-                <a href="?q={{ query }}&min_rating={{ min_rating }}&gen={{ gen }}&page={{ pagina_curenta|add:'1' }}">Următor »</a>
+            {% if page_obj.has_next %}
+                <a href="?q={{ request.GET.q }}&min_rating={{ request.GET.min_rating }}&gen={{ request.GET.gen }}&p={{ page_obj.next_page_number }}">Următor »</a>
             {% endif %}
         </div>
     </div>
-    {% endif %} {% endcomment %}
+    {% endif %}
 
-
-
-    <!-- SCRIPT AUTOCOMPLETE -->
     <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        const input = document.getElementById('search-input');
-        const suggestionsBox = document.getElementById('suggestions');
+document.addEventListener('DOMContentLoaded', function () {
+    const input = document.getElementById('search-input');
+    const suggestionsBox = document.getElementById('suggestions');
 
-        input.addEventListener('input', function () {
-            const query = input.value;
-            if (query.length < 2) {
+    input.addEventListener('input', function () {
+        const query = input.value;
+        if (query.length < 2) {
+            suggestionsBox.innerHTML = '';
+            return;
+        }
+
+        fetch(`/autocomplete?q=${encodeURIComponent(query)}`)
+            .then(response => response.json())
+            .then(data => {
                 suggestionsBox.innerHTML = '';
-                return;
-            }
-
-            fetch(`/autocomplete?q=${encodeURIComponent(query)}`)
-                .then(response => response.json())
-                .then(data => {
-                    suggestionsBox.innerHTML = '';
-                    data.results.slice(0, 3).forEach(film => {
-                        const div = document.createElement('div');
-                        div.innerHTML = `<a href="/film/${film.id}/" style="display:block; padding: 5px; text-decoration:none;">${film.title}</a>`;
-                        suggestionsBox.appendChild(div);
-                    });
+                data.results.slice(0, 3).forEach(film => {
+                    const div = document.createElement('div');
+                    div.innerHTML = `<a href="/film/${film.id}/" style="display:block; padding: 5px; text-decoration:none;">${film.title}</a>`;
+                    suggestionsBox.appendChild(div);
                 });
-        });
-
-        document.addEventListener('click', function (e) {
-            if (!suggestionsBox.contains(e.target) && e.target !== input) {
-                suggestionsBox.innerHTML = '';
-            }
-        });
+            });
     });
-    </script>
+
+    document.addEventListener('click', function (e) {
+        if (!suggestionsBox.contains(e.target) && e.target !== input) {
+            suggestionsBox.innerHTML = '';
+        }
+    });
+});
+</script>
+
 
     {% if user.is_authenticated %}
-    <footer style="position: fixed; bottom: 0; width: 100%; background: #f2f2f2; text-align: center; padding: 10px; border-top: 1px solid #ccc;">
+    <footer style="margin-top: 40px; background: #f2f2f2; text-align: center; padding: 10px; border-top: 1px solid #ccc;">
         Bună, {{ user.username }}!
     </footer>
     {% endif %}

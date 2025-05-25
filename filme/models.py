@@ -5,7 +5,7 @@ class Film(models.Model):
     id_tmdb = models.IntegerField(unique=True)
     titlu = models.CharField(max_length=200)
     poster_path = models.CharField(max_length=200, null=True, blank=True)
-    # Alte câmpuri relevante
+    genre_ids = models.JSONField(default=list)
 
 class Favorite(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)  # <-- modificare
