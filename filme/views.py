@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect # type: ignore
-from .utils import get_filme_populare, get_detalii_film
+from .utils import get_popular_movies, get_movie_details
 
 from django.contrib.auth import login, authenticate # type: ignore
 from django.contrib.auth.forms import UserCreationForm # type: ignore
@@ -9,11 +9,11 @@ from django.shortcuts import get_object_or_404 #adaugat de radu
 from .models import Film, Favorite #adagat de radu
 from .models import ViewHistory  #adagat de radu
 from django.contrib.auth.decorators import login_required #adagat de radu
-from .utils import get_video_film
+from .utils import get_movie_video
 
 
 def detalii_film(request, film_id):
-    film = get_detalii_film(film_id)
+    film = get_movie_details(film_id)
     user_favorite_ids = []
     
     if request.user.is_authenticated:
@@ -38,7 +38,7 @@ def detalii_film(request, film_id):
             film=film_obj  # Folosim obiectul Film creat mai sus
         )
     
-    trailer_url = get_video_film(film_id)
+    trailer_url = get_movie_video(film_id)
 
     return render(request, 'filme/detalii_film.html', {
         'film': film,  # Date din API
@@ -175,7 +175,7 @@ def adauga_favorit(request, film_id):
         return redirect('login')
     
     # Obține sau creează filmul în baza noastră de date
-    film_data = get_detalii_film(film_id)
+    film_data = get_movie_details(film_id)
     film, created = Film.objects.get_or_create(
         id_tmdb=film_id,
         defaults={
@@ -229,20 +229,20 @@ def istoric_vizionari(request):
     })
     
 from django.db.models import Q  # pentru căutare flexibilă
-from .utils import cauta_filme_tmdb
+from .utils import search_movies_tmdb
 from django.http import JsonResponse
 def autocomplete_filme(request):
     query = request.GET.get('q', '').strip()
     if not query:
         return JsonResponse({'results': []})
 
-    rezultat = cauta_filme_tmdb(query)
-    filme = rezultat.get('filme', [])  # ✅ obții lista din dict
+    rezultat = search_movies_tmdb(query)
+    movies = rezultat.get('movies', [])  # ✅ obții lista din dict
 
     return JsonResponse({
         'results': [
             {'id': film['id'], 'title': film['title']}
-            for film in filme[:5]
+            for film in movies[:5]
         ]
     })
 
@@ -281,7 +281,7 @@ def filme_populare_tmdb():
         return response.json().get('results', [])
     return []
 
-from .utils import descopera_filme_tmdb
+from .utils import discover_movies_tmdb
 from django.core.paginator import Paginator
 
 def home(request):
@@ -291,51 +291,51 @@ def home(request):
     pagina = int(request.GET.get('page', '1'))
 
     genuri = obtine_genuri_tmdb()
-    filme = []
-    pagina_curenta = pagina
-    total_pagini = 1
+    movies = []
+    current_page = pagina
+    total_pages = 1
 
     if query:
-        rezultat = cauta_filme_tmdb(query, pagina=pagina)
-        filme = rezultat['filme']
-        pagina_curenta = rezultat['pagina_curenta']
-        total_pagini = rezultat['total_pagini']
+        rezultat = search_movies_tmdb(query, page=pagina)
+        movies = rezultat['movies']
+        current_page = rezultat['current_page']
+        total_pages = rezultat['total_pages']
         if min_rating:
             try:
-                filme = [f for f in filme if f.get('vote_average', 0) >= float(min_rating)]
+                movies = [f for f in movies if f.get('vote_average', 0) >= float(min_rating)]
             except ValueError:
                 pass
         if gen:
             try:
                 gen_id = int(gen)
-                filme = [f for f in filme if gen_id in f.get('genre_ids', [])]
+                movies = [f for f in movies if gen_id in f.get('genre_ids', [])]
             except ValueError:
                 pass
     elif gen or min_rating:
-        rezultat = descopera_filme_tmdb(gen=gen, min_rating=min_rating, pagina=pagina)
-        filme = rezultat['filme']
-        pagina_curenta = rezultat['pagina_curenta']
-        total_pagini = rezultat['total_pagini']
+        rezultat = discover_movies_tmdb(genre=gen, min_rating=min_rating, page=pagina)
+        movies = rezultat['movies']
+        current_page = rezultat['current_page']
+        total_pages = rezultat['total_pages']
     else:
-        filme = filme_populare_tmdb()
+        movies = filme_populare_tmdb()
 
-    paginator = Paginator(filme, 4)
+    paginator = Paginator(movies, 4)
     pagina_django = request.GET.get('p')  # "p" pentru paginarea locală
     page_obj = paginator.get_page(pagina_django)
 
     context = {
-        'filme': page_obj.object_list,
+        'movies': page_obj.object_list,
         'genuri': genuri,
         'query': query,
         'min_rating': min_rating,
         'gen_selectat': gen,
-        'pagina_curenta': pagina_curenta,
-        'total_pagini': total_pagini,
+        'current_page': current_page,
+        'total_pages': total_pages,
         'page_obj': page_obj,   }
     return render(request, 'filme/home.html', context)
 
-from .utils import recomandari_pe_genuri
+from .utils import recommendations_by_genres
 @login_required
 def recomandari_view(request):
-    recomandari = recomandari_pe_genuri(request.user)
+    recomandari = recommendations_by_genres(request.user)
     return render(request, 'filme/recomandari.html', {'recomandari': recomandari})

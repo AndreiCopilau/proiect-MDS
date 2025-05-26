@@ -1,11 +1,12 @@
 from .models import Film
 
-def salveaza_film_tmdb_daca_nu_exista(film_dict):
+# Save a movie from TMDB if it does not already exist in the database yet.
+def save_movie_tmdb_if_not_exists(film_dict):
     id_tmdb = film_dict.get('id')
     if not id_tmdb:
         return None
 
-    film, created = Film.objects.get_or_create(
+    movie, created = Film.objects.get_or_create(
         id_tmdb=id_tmdb,
         defaults={
             'titlu': film_dict.get('title'),
@@ -14,63 +15,66 @@ def salveaza_film_tmdb_daca_nu_exista(film_dict):
         }
     )
 
-    # dacă filmul există dar nu are genuri, le completăm
-    if not created and not film.genre_ids and film_dict.get('genre_ids'):
-        film.genre_ids = film_dict['genre_ids']
-        film.save()
+    # if filme exists but has no genres, update them
+    if not created and not movie.genre_ids and film_dict.get('genre_ids'):
+        movie.genre_ids = film_dict['genre_ids']
+        movie.save()
 
-    return film
+    return movie
 
 
 import requests # type: ignore
 from django.conf import settings # type: ignore
 
-def get_filme_populare():
+# Fetch popular movies from TMDB and save them in the database.
+def get_popular_movies():
     url = f"https://api.themoviedb.org/3/movie/popular?api_key={settings.TMDB_API_KEY}&language=en-US&page=1"
     response = requests.get(url)
     if response.status_code == 200:
         data = response.json()
-        filme = data.get('results', [])
+        movies = data.get('results', [])
 
-        for film in filme:
-            salveaza_film_tmdb_daca_nu_exista(film)
+        for movie in movies:
+            save_movie_tmdb_if_not_exists(movie)
 
-        return filme  
+        return movies  
     return []
 
 
-def get_detalii_film(film_id):
+# Get detailed information about a specific movie by its TMDB ID.
+def get_movie_details(film_id):
     url = f"https://api.themoviedb.org/3/movie/{film_id}?api_key={settings.TMDB_API_KEY}&language=en-US"
     response = requests.get(url)
     return response.json() if response.status_code == 200 else None
 
-def cauta_filme_tmdb(query, pagina=1):
+# Search for movies on TMDB based on a query string. Save found movies in the database.
+def search_movies_tmdb(query, page=1):
     url = 'https://api.themoviedb.org/3/search/movie'
     params = {
         'api_key': settings.TMDB_API_KEY,
         'query': query,
         'language': 'ro-RO',
-        'page': pagina
+        'page': page
     }
     response = requests.get(url, params=params)
     if response.status_code == 200:
         data = response.json()
-        filme = data.get('results', [])
+        movies = data.get('results', [])
 
-        # 🔄 salvare filme în DB
-        for film in filme:
-            salveaza_film_tmdb_daca_nu_exista(film)
+        # save movies in DB
+        for movie in movies:
+            save_movie_tmdb_if_not_exists(movie)
 
         return {
-            'filme': data.get('results', []),
-            'pagina_curenta': data.get('page', 1),
-            'total_pagini': data.get('total_pages', 1)
+            'movies': data.get('results', []),
+            'current_page': data.get('page', 1),
+            'total_pages': data.get('total_pages', 1)
         }
-    return {'filme': [], 'pagina_curenta': 1, 'total_pagini': 1}
+    return {'movies': [], 'current_page': 1, 'total_pages': 1}
 
 
-
-def get_video_film(film_id):
+# Get the YouTube trailer embed URL for a movie by its TMDB ID.
+def get_movie_video(film_id):
     url = f"https://api.themoviedb.org/3/movie/{film_id}/videos?api_key={settings.TMDB_API_KEY}&language=en-US"
     response = requests.get(url)
     if response.status_code == 200:
@@ -80,18 +84,18 @@ def get_video_film(film_id):
                 return f"https://www.youtube.com/embed/{video['key']}"
     return None
 
-# pentru a face filtrare dupa toate filmele si sa existe paginare
-def descopera_filme_tmdb(gen=None, min_rating=None, pagina=1):
+# Discover movies on TMDB filtered by genre and minimum rating with pagination. Save discovered movies in the database.
+def discover_movies_tmdb(genre=None, min_rating=None, page=1):
     url = 'https://api.themoviedb.org/3/discover/movie'
     params = {
         'api_key': settings.TMDB_API_KEY,
         'language': 'ro-RO',
         'sort_by': 'popularity.desc',
-        'page': pagina
+        'page': page
     }
 
-    if gen:
-        params['with_genres'] = gen
+    if genre:
+        params['with_genres'] = genre
     if min_rating:
         try:
             params['vote_average.gte'] = float(min_rating)
@@ -101,51 +105,49 @@ def descopera_filme_tmdb(gen=None, min_rating=None, pagina=1):
     response = requests.get(url, params=params)
     if response.status_code == 200:
         data = response.json()
-        filme = data.get('results', [])
+        movies = data.get('results', [])
 
         # 🔄 salvare filme în DB
-        for film in filme:
-            salveaza_film_tmdb_daca_nu_exista(film)
+        for movie in movies:
+            save_movie_tmdb_if_not_exists(movie)
 
         return {
-            'filme': filme,
-            'pagina_curenta': data.get('page', 1),
-            'total_pagini': data.get('total_pages', 1)
+            'movies': movies,
+            'current_page': data.get('page', 1),
+            'total_pages': data.get('total_pages', 1)
         }
-    return {'filme': [], 'pagina_curenta': 1, 'total_pagini': 1}
+    return {'movies': [], 'current_page': 1, 'total_pages': 1}
 
 
 from collections import Counter
 from .models import ViewHistory, Film
 
-def recomandari_pe_genuri(user, top_n=3, filme_per_gen=3):
-    from collections import Counter
-    from .models import ViewHistory, Film
+# Generate movie recommendations based on the user's viewing history and favorite genres.
+def recommendations_by_genres(user, top_n=3, movies_per_genre=3):
+    watched  = ViewHistory.objects.filter(user=user).select_related('film')
+    all_genres = []
 
-    vizionari = ViewHistory.objects.filter(user=user).select_related('film')
-    toate_genurile = []
+    watched_movie_ids = set(v.film.id_tmdb for v in watched)
 
-    filme_vizionate_ids = set(v.film.id_tmdb for v in vizionari)
+    for view in watched:
+        all_genres.extend(view.film.genre_ids)
 
-    for viz in vizionari:
-        toate_genurile.extend(viz.film.genre_ids)
+    favorite_genres = [genre for genre, _ in Counter(all_genres).most_common(top_n)]
 
-    genuri_preferate = [gen for gen, _ in Counter(toate_genurile).most_common(top_n)]
+    recommendations  = []
+    recommended_movie_ids  = set()
 
-    recomandari = []
-    filme_recomandate_ids = set()
-
-    for gen_id in genuri_preferate:
-        rezultat = descopera_filme_tmdb(gen=gen_id)
-        if rezultat and 'filme' in rezultat:
-            for film in rezultat['filme']:
-                if film['id'] not in filme_vizionate_ids and film['id'] not in filme_recomandate_ids:
-                    recomandari.append(film)
-                    filme_recomandate_ids.add(film['id'])
-                    if len(recomandari) >= top_n * filme_per_gen:
+    for genre_id in favorite_genres:
+        result = discover_movies_tmdb(genre=genre_id)
+        if result and 'movies' in result:
+            for movie in result['movies']:
+                if movie['id'] not in watched_movie_ids and movie['id'] not in recommended_movie_ids:
+                    recommendations.append(movie)
+                    recommended_movie_ids.add(movie['id'])
+                    if len(recommendations) >= top_n * movies_per_genre:
                         break
 
-    return recomandari
+    return recommendations
 
 
 import requests
@@ -153,28 +155,29 @@ from .models import Film
 
 TMDB_API_KEY = '7c4f52f7a9bfd765ee2774bb2c1ca19c'
 
-def completeaza_genuri_filme():
+# For movies in the database without genres, fetch and update their genres from TMDB.
+def fill_movie_genres():
     base_url = "https://api.themoviedb.org/3/movie/"
     headers = {"Accept": "application/json"}
-    filme_fara_genuri = Film.objects.filter(genre_ids=[])
+    movies_without_genres  = Film.objects.filter(genre_ids=[])
 
-    for film in filme_fara_genuri:
-        url = f"{base_url}{film.id_tmdb}"
+    for movie in movies_without_genres:
+        url = f"{base_url}{movie.id_tmdb}"
         params = {
             "api_key": TMDB_API_KEY,
-            "language": "ro-RO"  # sau "en-US"
+            "language": "ro-RO"  
         }
 
         try:
             response = requests.get(url, headers=headers, params=params)
             if response.status_code == 200:
                 data = response.json()
-                genuri = data.get("genres", [])
-                ids = [g["id"] for g in genuri]
-                film.genre_ids = ids
-                film.save()
-                print(f"✔ Genuri completate pentru: {film.titlu}")
+                genres = data.get("genres", [])
+                ids = [g["id"] for g in genres]
+                movie.genre_ids = ids
+                movie.save()
+                print(f"✔ Genuri completate pentru: {movie.titlu}")
             else:
-                print(f"✖ Eroare la {film.titlu} (status {response.status_code})")
+                print(f"✖ Eroare la {movie.titlu} (status {response.status_code})")
         except Exception as e:
-            print(f"✖ Eroare la {film.titlu}: {e}")
+            print(f"✖ Eroare la {movie.titlu}: {e}")
