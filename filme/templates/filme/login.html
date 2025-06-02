@@ -1,132 +1,42 @@
-{% comment %} <!DOCTYPE html>
-<html>
-<head>
-    <title>Autentificare</title>
-</head>
+{% extends "filme/base.html" %}
 
-<body>
-    <h2>Autentificare</h2>
-    {% if error %}
-        <p style="color:red;">{{ error }}</p>
-    {% endif %}
-    <form method="POST">
-        {% csrf_token %}
-        <label for="username">Nume utilizator:</label>
-        <input type="text" name="username" required><br>
-        <label for="password">Parolă:</label>
-        <input type="password" name="password" required><br>
-        <button type="submit">Autentifică-te</button>
-    </form>
-    <p>Nu ai cont? <a href="{% url 'register' %}">Înregistrează-te aici</a></p>
-</body>
-</html> {% endcomment %}
-
-<!DOCTYPE html>
-<html lang="ro">
-<head>
-    <meta charset="UTF-8">
-    <title>Autentificare</title>
-    <style>
-        body {
-            margin: 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            display: flex;
-            height: 100vh;
-        }
-
-        .left-panel {
-            flex: 1;
-            background-color: #ffffff;
-            padding: 60px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-        }
-
-        .left-panel h2 {
-            font-size: 32px;
-            font-weight: bold;
-            color: #000000;
-            margin-bottom: 30px;
-        }
-
-        form label {
-            display: block;
-            margin-bottom: 8px;
-            color: #333;
-            font-weight: bold;
-        }
-
-        form input {
-            width: 100%;
-            padding: 10px;
-            margin-bottom: 20px;
-            border: none;
-            border-bottom: 2px solid #ccc;
-            font-size: 16px;
-        }
-
-        .auth-button {
-            background-color: #0a11f2;
-            color: white;
-            border: none;
-            padding: 12px 20px;
-            font-size: 16px;
-            border-radius: 30px;
-            cursor: pointer;
-        }
-
-        .auth-button:hover {
-            background-color: #5374f5;
-        }
-
-        .right-panel {
-            flex: 1;
-            {% comment %} background-image: url("{% static 'images/login-poster.jpg' %}"); {% endcomment %}
-            background-size: cover;
-            background-position: center;
-        }
-
-        .links {
-            margin-top: 15px;
-        }
-
-        .links a {
-            color: #0a11f2;
-            text-decoration: none;
-        }
-
-        .links a:hover {
-            text-decoration: underline;
-        }
-
-        .error {
-            color: red;
-        }
-    </style>
-</head>
-
-<body>
-    <div class="left-panel">
-        <h2>Autentificare</h2>
-        {% if error %}
-            <p class="error">{{ error }}</p>
-        {% endif %}
-        <form method="POST">
-            {% csrf_token %}
-            <label for="username">Nume utilizator</label>
-            <input type="text" name="username" required>
-
-            <label for="password">Parolă</label>
-            <input type="password" name="password" required>
-
-            <button type="submit" class="auth-button">AUTENTIFICARE</button>
-        </form>
-        <div class="links">
-            <p>Încă nu ai un cont? <a href="{% url 'register' %}">Înregistrează-te!</a></p>
+{% block content %}
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow-lg">
+                <div class="card-header bg-primary text-white">
+                    <h2 class="text-center mb-0"><i class="fas fa-sign-in-alt"></i> Autentificare</h2>
+                </div>
+                <div class="card-body p-4">
+                    {% if error %}
+                    <div class="alert alert-danger">{{ error }}</div>
+                    {% endif %}
+                    
+                    <form method="POST">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="username" class="form-label">Nume utilizator</label>
+                            <input type="text" class="form-control" id="username" name="username" required>
+                        </div>
+                        <div class="mb-4">
+                            <label for="password" class="form-label">Parolă</label>
+                            <input type="password" class="form-control" id="password" name="password" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100 py-2">
+                            <i class="fas fa-sign-in-alt"></i> Autentifică-te
+                        </button>
+                    </form>
+                    
+                    <div class="mt-4 text-center">
+                        <p>Nu ai cont? <a href="{% url 'register' %}">Înregistrează-te aici</a></p>
+                        <a href="{% url 'home' %}" class="text-muted">
+                            <i class="fas fa-arrow-left"></i> Înapoi la pagina principală
+                        </a>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
-
-    <div class="right-panel"></div>
-</body>
-</html>
+</div>
+{% endblock %}

@@ -1,69 +1,36 @@
-<!DOCTYPE html>
-<html lang="ro">
-<head>
-    <meta charset="UTF-8">
-    <title>Recomandări pentru tine</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            padding: 20px;
-        }
-        h2 {
-            text-align: center;
-        }
-        .grid {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            gap: 20px;
-            margin-top: 30px;
-        }
-        .film {
-            width: 200px;
-            text-align: center;
-        }
-        .film img {
-            width: 100%;
-            border-radius: 10px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-        }
-        .btn-back {
-            display: inline-block;
-            margin: 15px auto;
-            padding: 10px 20px;
-            background-color: #007bff;
-            color: white;
-            text-decoration: none;
-            border-radius: 5px;
-            text-align: center;
-        }
-        .btn-back:hover {
-            background-color: #0056b3;
-        }
-    </style>
-</head>
-<body>
+{% extends "filme/base.html" %}
 
-    <h2>🎯 Recomandări pentru tine</h2>
+{% block content %}
+<div class="text-center mb-5">
+    <h1 class="display-5">Recomandări personalizate</h1>
+    <p class="lead">Filme selectate special pentru tine, pe baza preferințelor tale</p>
+</div>
 
-    <div style="text-align: center;">
-        <a href="{% url 'home' %}" class="btn-back">⏪ Înapoi la pagina principală</a>
-    </div>
-
-    {% if recomandari %}
-        <div class="grid">
-            {% for film in recomandari %}
-                <div class="film">
-                    <a href="{% url 'detalii_film' film.id %}">
-                        <img src="https://image.tmdb.org/t/p/w200{{ film.poster_path }}" alt="{{ film.title }}">
-                        <h4>{{ film.title }}</h4>
-                    </a>
-                </div>
-            {% endfor %}
+{% if recomandari %}
+<div class="row row-cols-2 row-cols-md-4 row-cols-lg-5 g-4">
+    {% for film in recomandari %}
+    <div class="col">
+        <div class="card h-100 film-card">
+            <a href="{% url 'detalii_film' film.id %}">
+                <img src="https://image.tmdb.org/t/p/w500{{ film.poster_path }}" 
+                     class="card-img-top" alt="{{ film.title }}">
+            </a>
+            <div class="card-body">
+                <h5 class="card-title">{{ film.title }}</h5>
+                <p class="card-text text-muted">
+                    <small>★ {{ film.vote_average }}</small>
+                </p>
+            </div>
         </div>
-    {% else %}
-        <p style="text-align: center;">Nu am suficiente date pentru a genera recomandări. Vizualizează mai întâi câteva filme!</p>
-    {% endif %}
-
-</body>
-</html>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="alert alert-info">
+    <h4 class="alert-heading">Ne pare rău!</h4>
+    <p>Nu avem suficiente date pentru recomandări. Vizualizează mai multe filme pentru a îmbunătăți recomandările.</p>
+    <hr>
+    <a href="{% url 'home' %}" class="btn btn-primary">Explorează filme</a>
+</div>
+{% endif %}
+{% endblock %}

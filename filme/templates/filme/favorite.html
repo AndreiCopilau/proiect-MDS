@@ -1,76 +1,41 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Filmele mele favorite</title>
-    <style>
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-        .home-button {
-            display: inline-block;
-            padding: 10px 20px;
-            background-color: #007bff;
-            color: white;
-            text-decoration: none;
-            border-radius: 5px;
-            margin-bottom: 20px;
-        }
-        .home-button:hover {
-            background-color: #5374f5;
-        }
-        .film-list {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-            gap: 20px;
-        }
-        .film-item {
-            border: 1px solid #ddd;
-            padding: 15px;
-            border-radius: 5px;
-            text-align: center;
-        }
-        .film-item button {
-            margin-top: 10px;
-            background-color: #dc3545;
-            color: white;
-            border: none;
-            padding: 8px 12px;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-        .film-item button:hover {
-            background-color: #b52d3a;
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <!-- Buton de "Înapoi acasă" -->
-        <a href="{% url 'home' %}" class="home-button">← Înapoi acasă</a>
-        
-        <h1>Filmele mele favorite</h1>
-        
-        {% if favorite %}
-            <div class="film-list">
-                {% for fav in favorite %}
-                    <div class="film-item">
-                        <a href="{% url 'detalii_film' fav.film.id_tmdb %}">
-                            <img src="https://image.tmdb.org/t/p/w200{{ fav.film.poster_path }}" 
-                                 alt="{{ fav.film.titlu }}" style="width:100%; border-radius:5px;">
-                            <h3>{{ fav.film.titlu }}</h3>
-                        </a>
-                        <form action="{% url 'elimina_favorit' fav.film.id_tmdb %}" method="post">
-                            {% csrf_token %}
-                            <button type="submit">Șterge din favorite</button>
-                        </form>
-                    </div>
-                {% endfor %}
-            </div>
-        {% else %}
-            <p>Nu ai niciun film adăugat la favorite.</p>
-        {% endif %}
+{% extends "filme/base.html" %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="display-4">Filme favorite</h1>
+        <a href="{% url 'home' %}" class="btn btn-outline-primary">
+            <i class="fas fa-arrow-left"></i> Înapoi
+        </a>
     </div>
-</body>
-</html>
+
+    {% if filme %}
+    <div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 g-4">
+        {% for film in filme %}
+        <div class="col">
+            <div class="card h-100 shadow-sm">
+                <a href="{% url 'detalii_film' film.id_tmdb %}">
+                    <img src="https://image.tmdb.org/t/p/w500{{ film.poster_path }}" 
+                         class="card-img-top" alt="{{ film.title }}">
+                </a>
+                <div class="card-body">
+                    <h5 class="card-title">{{ film.title }}</h5>
+                    <form action="{% url 'elimina_favorit' film.id_tmdb %}" method="post">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-sm btn-danger w-100">
+                            <i class="fas fa-trash-alt"></i> Elimină
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="alert alert-info">
+        <h4 class="alert-heading">Nu ai filme favorite!</h4>
+        <p>Adaugă filme la favorite pentru a le vedea aici.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,61 +1,42 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Istoric vizionări</title>
-    <style>
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-        .home-button {
-            display: inline-block;
-            padding: 10px 20px;
-            background-color: #007bff;
-            color: white;
-            text-decoration: none;
-            border-radius: 5px;
-            margin-bottom: 20px;
-        }
-        .home-button:hover {
-            background-color: #5374f5;
-        }
-        .film-list {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-            gap: 20px;
-        }
-        .film-item {
-            border: 1px solid #ddd;
-            padding: 15px;
-            border-radius: 5px;
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <!-- Buton de "Acasă" -->
-        <a href="{% url 'home' %}" class="home-button">← Înapoi acasă</a>
-        
-        <h1>Istoricul tău de vizionări</h1>
-        
-        <div class="film-list">
-            {% for entry in istoric %}
-            <div class="film-item">
-                <img src="https://image.tmdb.org/t/p/w200{{ entry.film.poster_path }}" 
-                     alt="{{ entry.film.titlu }}"
-                     style="width:100%; border-radius:5px;">
-                <h3>{{ entry.film.titlu }}</h3>
-                <p><small>Vizionat la: {{ entry.viewed_at|date:"d M Y H:i" }}</small></p>
-                <a href="{% url 'detalii_film' entry.film.id_tmdb %}" 
-                   style="color:#4CAF50; text-decoration:none;">
-                   Vezi detalii
-                </a>
-            </div>
-            {% empty %}
-            <p>Nu ai vizionat încă niciun film.</p>
-            {% endfor %}
-        </div>
+{% extends "filme/base.html" %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="display-4">Istoric vizionări</h1>
+        <a href="{% url 'home' %}" class="btn btn-outline-primary">
+            <i class="fas fa-arrow-left"></i> Înapoi
+        </a>
     </div>
-</body>
-</html>
+
+    {% if istoric %}
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+        {% for entry in istoric %}
+        <div class="col">
+            <div class="card h-100 shadow-sm">
+                <img src="https://image.tmdb.org/t/p/w500{{ entry.film.poster_path }}" 
+                     class="card-img-top" alt="{{ entry.film.titlu }}">
+                <div class="card-body">
+                    <h5 class="card-title">{{ entry.film.titlu }}</h5>
+                    <p class="text-muted">
+                        <small>
+                            <i class="far fa-clock"></i> {{ entry.viewed_at|date:"d M Y H:i" }}
+                        </small>
+                    </p>
+                    <a href="{% url 'detalii_film' entry.film.id_tmdb %}" 
+                       class="btn btn-sm btn-primary w-100">
+                        <i class="fas fa-info-circle"></i> Detalii
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="alert alert-info">
+        <h4 class="alert-heading">Istoric gol</h4>
+        <p>Nu ai vizionat încă niciun film.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
