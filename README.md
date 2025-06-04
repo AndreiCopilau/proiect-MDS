@@ -7,6 +7,7 @@
 - [Members](#members)
 - [Backlog](#backlog)
 - [Diagrama UML (Use Case)](#diagrama-uml-use-case)
+- [Diagrama UML (Clase)](#diagrama-uml-clase)
 
 ## Descriere proiect:
 Acest proiect reprezintă un sistem de recomandare de filme, care permite utilizatorilor să vizualizeze filme populare în timp real (prin integrarea cu API-ul TMDB), să salveze filme favorite și să primească recomandări personalizate pe baza istoricului de vizionare și a filmelor salvate.  
@@ -22,3 +23,6 @@ Sistemul oferă, de asemenea, funcționalități de autentificare și gestionare
 
 ## Diagrama UML (Use Case)
 ![Diagrama Use Case](images/diagrama-use-case.png)
+
+## Diagrama UML (Clase)
+![Diagrama Clase](images/diagrama-clase.png)
