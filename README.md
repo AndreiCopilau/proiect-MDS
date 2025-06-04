@@ -21,6 +21,7 @@ Sistemul oferă, de asemenea, funcționalități de autentificare și gestionare
 ## Backlog
 [Link catre backlog](https://copilauandrei.atlassian.net/jira/software/projects/KAN/boards/1?assignee=unassigned)
 
+
 ## Diagrama UML (Use Case)
 ![Diagrama Use Case](images/diagrama-use-case.png)
 
