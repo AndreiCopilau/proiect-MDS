@@ -9,18 +9,18 @@
         </a>
     </div>
 
-    {% if filme %}
+    {% if favorite %}  <!-- Schimbat din 'filme' în 'favorite' -->
     <div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 g-4">
-        {% for film in filme %}
+        {% for fav in favorite %}  <!-- Iterăm prin obiectele Favorite -->
         <div class="col">
             <div class="card h-100 shadow-sm">
-                <a href="{% url 'detalii_film' film.id_tmdb %}">
-                    <img src="https://image.tmdb.org/t/p/w500{{ film.poster_path }}" 
-                         class="card-img-top" alt="{{ film.title }}">
+                <a href="{% url 'detalii_film' fav.film.id_tmdb %}">  <!-- Accesăm filmul -->
+                    <img src="https://image.tmdb.org/t/p/w500{{ fav.film.poster_path }}" 
+                         class="card-img-top" alt="{{ fav.film.titlu }}">
                 </a>
                 <div class="card-body">
-                    <h5 class="card-title">{{ film.title }}</h5>
-                    <form action="{% url 'elimina_favorit' film.id_tmdb %}" method="post">
+                    <h5 class="card-title">{{ fav.film.titlu }}</h5>  <!-- Titlul filmului -->
+                    <form action="{% url 'elimina_favorit' fav.film.id_tmdb %}" method="post">
                         {% csrf_token %}
                         <button type="submit" class="btn btn-sm btn-danger w-100">
                             <i class="fas fa-trash-alt"></i> Elimină
