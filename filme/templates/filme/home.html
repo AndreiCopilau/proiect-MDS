@@ -82,7 +82,8 @@
     <ul class="pagination justify-content-center">
         {% if page_obj.has_previous %}
         <li class="page-item">
-            <a class="page-link" href="?page={{ page_obj.previous_page_number }}&q={{ request.GET.q }}&gen={{ request.GET.gen }}&min_rating={{ request.GET.min_rating }}">
+            <a class="page-link" 
+               href="?page={{ page_obj.previous_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.gen %}&gen={{ request.GET.gen }}{% endif %}{% if request.GET.min_rating %}&min_rating={{ request.GET.min_rating }}{% endif %}">
                 <i class="fas fa-chevron-left"></i>
             </a>
         </li>
@@ -90,7 +91,8 @@
         
         {% for num in page_obj.paginator.page_range %}
         <li class="page-item {% if num == page_obj.number %}active{% endif %}">
-            <a class="page-link" href="?page={{ num }}&q={{ request.GET.q }}&gen={{ request.GET.gen }}&min_rating={{ request.GET.min_rating }}">
+            <a class="page-link" 
+               href="?page={{ num }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.gen %}&gen={{ request.GET.gen }}{% endif %}{% if request.GET.min_rating %}&min_rating={{ request.GET.min_rating }}{% endif %}">
                 {{ num }}
             </a>
         </li>
@@ -98,7 +100,8 @@
         
         {% if page_obj.has_next %}
         <li class="page-item">
-            <a class="page-link" href="?page={{ page_obj.next_page_number }}&q={{ request.GET.q }}&gen={{ request.GET.gen }}&min_rating={{ request.GET.min_rating }}">
+            <a class="page-link" 
+               href="?page={{ page_obj.next_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.gen %}&gen={{ request.GET.gen }}{% endif %}{% if request.GET.min_rating %}&min_rating={{ request.GET.min_rating }}{% endif %}">
                 <i class="fas fa-chevron-right"></i>
             </a>
         </li>

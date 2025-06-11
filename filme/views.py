@@ -270,17 +270,43 @@ def cauta_filme(query):
         return response.json().get('results', [])
     return []
 
-def filme_populare_tmdb():
-    url = f"https://api.themoviedb.org/3/movie/popular"
+def filme_populare_tmdb(page=1):
+    """
+    Returnează filme populare de la TMDB cu suport pentru paginare
+    Args:
+        page (int): Numărul paginii dorite
+    Returns:
+        dict: {
+            'movies': lista de filme,
+            'current_page': pagina curentă,
+            'total_pages': numărul total de pagini
+        }
+    """
+    url = "https://api.themoviedb.org/3/movie/popular"
     params = {
         'api_key': settings.TMDB_API_KEY,
-        'language': 'ro-RO'
+        'language': 'ro-RO',
+        'page': page  # Adaugă parametrul page la cerere
     }
-    response = requests.get(url, params=params)
-    if response.status_code == 200:
-        return response.json().get('results', [])
-    return []
-
+    
+    try:
+        response = requests.get(url, params=params)
+        response.raise_for_status()  # Ridică excepție pentru coduri de eroare
+        
+        data = response.json()
+        return {
+            'movies': data.get('results', []),
+            'current_page': data.get('page', 1),
+            'total_pages': data.get('total_pages', 1)
+        }
+        
+    except requests.exceptions.RequestException as e:
+        print(f"Eroare la obținerea filmelor populare: {e}")
+        return {
+            'movies': [],
+            'current_page': 1,
+            'total_pages': 1
+        }
 from .utils import discover_movies_tmdb
 from django.core.paginator import Paginator
 
@@ -288,50 +314,36 @@ def home(request):
     query = request.GET.get('q', '').strip()
     min_rating = request.GET.get('min_rating')
     gen = request.GET.get('gen')
-    pagina = int(request.GET.get('page', '1'))
+    page = request.GET.get('page', 1)  # Folosește doar 'page'
+
+    try:
+        page = int(page)
+    except ValueError:
+        page = 1
 
     genuri = obtine_genuri_tmdb()
-    movies = []
-    current_page = pagina
-    total_pages = 1
-
+    
+    # Obține filme în funcție de filtre
     if query:
-        rezultat = search_movies_tmdb(query, page=pagina)
-        movies = rezultat['movies']
-        current_page = rezultat['current_page']
-        total_pages = rezultat['total_pages']
-        if min_rating:
-            try:
-                movies = [f for f in movies if f.get('vote_average', 0) >= float(min_rating)]
-            except ValueError:
-                pass
-        if gen:
-            try:
-                gen_id = int(gen)
-                movies = [f for f in movies if gen_id in f.get('genre_ids', [])]
-            except ValueError:
-                pass
+        result = search_movies_tmdb(query, page=page)
     elif gen or min_rating:
-        rezultat = discover_movies_tmdb(genre=gen, min_rating=min_rating, page=pagina)
-        movies = rezultat['movies']
-        current_page = rezultat['current_page']
-        total_pages = rezultat['total_pages']
+        result = discover_movies_tmdb(
+            genre=gen, 
+            min_rating=min_rating, 
+            page=page
+        )
     else:
-        movies = filme_populare_tmdb()
+        result = filme_populare_tmdb(page=page)  # Adaugă suport pentru paginare
 
-    paginator = Paginator(movies, 4)
-    pagina_django = request.GET.get('p')  # "p" pentru paginarea locală
-    page_obj = paginator.get_page(pagina_django)
+    # Creează Paginator cu rezultatele
+    paginator = Paginator(result['movies'], 20)  # 20 filme pe pagină
+    page_obj = paginator.get_page(page)
 
     context = {
-        'movies': page_obj.object_list,
+        'page_obj': page_obj,
         'genuri': genuri,
-        'query': query,
-        'min_rating': min_rating,
-        'gen_selectat': gen,
-        'current_page': current_page,
-        'total_pages': total_pages,
-        'page_obj': page_obj,   }
+        'request': request,  # Pentru a accesa GET params în template
+    }
     return render(request, 'filme/home.html', context)
 
 from .utils import recommendations_by_genres
