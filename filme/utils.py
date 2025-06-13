@@ -1,6 +1,14 @@
-from .models import Film
+import requests
+from collections import Counter
+from django.conf import settings
 
-# Save a movie from TMDB if it does not already exist in the database yet.
+from .models import Film, ViewHistory
+
+
+"""
+Saves a movie from TMDB to the database if it does not already exist.
+Updates genres if missing.
+"""
 def save_movie_tmdb_if_not_exists(film_dict):
     id_tmdb = film_dict.get('id')
     if not id_tmdb:
@@ -15,7 +23,7 @@ def save_movie_tmdb_if_not_exists(film_dict):
         }
     )
 
-    # if filme exists but has no genres, update them
+    # if movie exists but has no genres, update them
     if not created and not movie.genre_ids and film_dict.get('genre_ids'):
         movie.genre_ids = film_dict['genre_ids']
         movie.save()
@@ -23,13 +31,14 @@ def save_movie_tmdb_if_not_exists(film_dict):
     return movie
 
 
-import requests # type: ignore
-from django.conf import settings # type: ignore
-
-# Fetch popular movies from TMDB and save them in the database.
+"""
+Fetches popular movies from TMDB and saves them in the database.
+Returns the list of movies fetched.
+"""
 def get_popular_movies():
     url = f"https://api.themoviedb.org/3/movie/popular?api_key={settings.TMDB_API_KEY}&language=en-US&page=1"
     response = requests.get(url)
+    
     if response.status_code == 200:
         data = response.json()
         movies = data.get('results', [])
@@ -38,16 +47,23 @@ def get_popular_movies():
             save_movie_tmdb_if_not_exists(movie)
 
         return movies  
+    
     return []
 
 
-# Get detailed information about a specific movie by its TMDB ID.
+"""
+Get detailed information about a specific movie by its TMDB ID.
+"""
 def get_movie_details(film_id):
     url = f"https://api.themoviedb.org/3/movie/{film_id}?api_key={settings.TMDB_API_KEY}&language=en-US"
     response = requests.get(url)
     return response.json() if response.status_code == 200 else None
 
-# Search for movies on TMDB based on a query string. Save found movies in the database.
+
+"""
+Search for movies on TMDB based on a query string. Save found movies in the database.
+Returns a dictionary with the list of movies, current page, and total pages.
+"""
 def search_movies_tmdb(query, page=1):
     url = 'https://api.themoviedb.org/3/search/movie'
     params = {
@@ -56,7 +72,9 @@ def search_movies_tmdb(query, page=1):
         'language': 'ro-RO',
         'page': page
     }
+    
     response = requests.get(url, params=params)
+    
     if response.status_code == 200:
         data = response.json()
         movies = data.get('results', [])
@@ -70,21 +88,30 @@ def search_movies_tmdb(query, page=1):
             'current_page': data.get('page', 1),
             'total_pages': data.get('total_pages', 1)
         }
+        
     return {'movies': [], 'current_page': 1, 'total_pages': 1}
 
 
-# Get the YouTube trailer embed URL for a movie by its TMDB ID.
+"""
+#Get the YouTube trailer embed URL for a movie by its TMDB ID.
+"""
 def get_movie_video(film_id):
     url = f"https://api.themoviedb.org/3/movie/{film_id}/videos?api_key={settings.TMDB_API_KEY}&language=en-US"
     response = requests.get(url)
+    
     if response.status_code == 200:
         videos = response.json().get('results', [])
         for video in videos:
             if video['site'] == 'YouTube' and video['type'] == 'Trailer':
                 return f"https://www.youtube.com/embed/{video['key']}"
+            
     return None
 
-# Discover movies on TMDB filtered by genre and minimum rating with pagination. Save discovered movies in the database.
+
+"""
+Discover movies on TMDB filtered by genre and minimum rating with pagination. 
+Save discovered movies in the database and returns a paginated list.
+"""
 def discover_movies_tmdb(genre=None, min_rating=None, page=1):
     url = 'https://api.themoviedb.org/3/discover/movie'
     params = {
@@ -103,11 +130,12 @@ def discover_movies_tmdb(genre=None, min_rating=None, page=1):
             pass
 
     response = requests.get(url, params=params)
+    
     if response.status_code == 200:
         data = response.json()
         movies = data.get('results', [])
 
-        # 🔄 salvare filme în DB
+        # save movies in DB
         for movie in movies:
             save_movie_tmdb_if_not_exists(movie)
 
@@ -116,18 +144,17 @@ def discover_movies_tmdb(genre=None, min_rating=None, page=1):
             'current_page': data.get('page', 1),
             'total_pages': data.get('total_pages', 1)
         }
+        
     return {'movies': [], 'current_page': 1, 'total_pages': 1}
 
 
-from collections import Counter
-from .models import ViewHistory, Film
-
-# Generate movie recommendations based on the user's viewing history and favorite genres.
+"""
+Generate movie recommendations based on the user's viewing history and favorite genres.
+"""	
 def recommendations_by_genres(user, top_n=3, movies_per_genre=3):
     watched  = ViewHistory.objects.filter(user=user).select_related('film')
-    all_genres = []
-
     watched_movie_ids = set(v.film.id_tmdb for v in watched)
+    all_genres = []
 
     for view in watched:
         all_genres.extend(view.film.genre_ids)
@@ -150,12 +177,9 @@ def recommendations_by_genres(user, top_n=3, movies_per_genre=3):
     return recommendations
 
 
-import requests
-from .models import Film
-
-TMDB_API_KEY = '7c4f52f7a9bfd765ee2774bb2c1ca19c'
-
-# For movies in the database without genres, fetch and update their genres from TMDB.
+"""
+For movies in the database without genres, fetch and update their genres from TMDB.
+"""
 def fill_movie_genres():
     base_url = "https://api.themoviedb.org/3/movie/"
     headers = {"Accept": "application/json"}
@@ -164,7 +188,7 @@ def fill_movie_genres():
     for movie in movies_without_genres:
         url = f"{base_url}{movie.id_tmdb}"
         params = {
-            "api_key": TMDB_API_KEY,
+            "api_key": settings.TMDB_API_KEY,
             "language": "ro-RO"  
         }
 
