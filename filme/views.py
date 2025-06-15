@@ -69,9 +69,10 @@ def inregistrare_utilizator(request):
     if request.method == 'POST':
         form = UserCustomForm(request.POST)
         if form.is_valid():
+            # Validare custom username
             if form.cleaned_data['username'].lower() == 'admin':
-                messages.error(request, "Nu poti folosi acest username.")
-                return redirect('inregistrare_utilizator')
+                form.add_error('username', "Nu poti folosi acest username.")
+                return render(request, 'filme/register.html', {'form': form})
 
             try:
                 user = form.save(commit=False)
@@ -80,7 +81,7 @@ def inregistrare_utilizator(request):
                 user.save()
             except Exception:
                 messages.error(request, "A aparut o eroare. Te rugam sa incerci din nou.")
-                return redirect('inregistrare_utilizator')
+                return render(request, 'filme/register.html', {'form': form})
 
             subject = "Confirmare email - Bun venit pe site-ul nostru!"
             message = f"""
@@ -108,7 +109,6 @@ def inregistrare_utilizator(request):
         form = UserCustomForm()
 
     return render(request, 'filme/register.html', {'form': form})
-
 
 @csrf_protect
 def login_view(request):

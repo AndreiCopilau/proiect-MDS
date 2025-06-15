@@ -16,6 +16,12 @@ class FavoriteTests(TestCase):
         self.assertEqual(response.status_code, 302)
         self.assertTrue(Favorite.objects.filter(user=self.user, film=self.film).exists())
 
+    def test_favorit_nu_se_adauga_de_doua_ori(self):
+        Favorite.objects.create(user=self.user, film=self.film)
+        response = self.client.get(reverse('adauga_favorit', args=[9999]))
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(Favorite.objects.filter(user=self.user, film=self.film).count(), 1)
+
 
 class IstoricVizionariTests(TestCase):
     def setUp(self):
@@ -29,6 +35,11 @@ class IstoricVizionariTests(TestCase):
     def test_istoric_afiseaza(self):
         response = self.client.get(reverse('istoric_vizionari'))
         self.assertContains(response, "Vizionat")
+
+    def test_istoric_vid(self):
+        ViewHistory.objects.all().delete()
+        response = self.client.get(reverse('istoric_vizionari'))
+        self.assertContains(response, "Nu ai vizionat încă niciun film.", status_code=200)
 
 
 class UtilizatorTest(TestCase):
@@ -54,6 +65,18 @@ class UtilizatorTest(TestCase):
         self.assertEqual(response.status_code, 302)  # redirect
         self.assertTrue(UserCustom.objects.filter(username='nou_user').exists())
 
+    def test_inregistrare_username_interzis(self):
+        response = self.client.post(reverse('register'), {
+            'username': 'admin',
+            'email': 'admin@email.com',
+            'telefon': '0700000000',
+            'data_nasterii': '1990-01-01',
+            'gen': 'M',
+            'password1': 'Testparola123!',
+            'password2': 'Testparola123!',
+        }, follow=True)
+        self.assertContains(response, "Nu poti folosi acest username.", status_code=200)
+
     def test_login_fara_confirmare_email(self):
         user = UserCustom.objects.create_user(
             username='noemail',
@@ -64,9 +87,8 @@ class UtilizatorTest(TestCase):
         response = self.client.post(reverse('login'), {
             'username': 'noemail',
             'password': 'parolatest'
-        }, follow=True)  # urmărim redirectul
+        }, follow=True)
         self.assertContains(response, "Adresa de email nu este confirmata", status_code=200)
-
 
     def test_login_cu_confirmare_email(self):
         response = self.client.post(reverse('login'), {
@@ -74,6 +96,14 @@ class UtilizatorTest(TestCase):
             'password': 'testpass123'
         })
         self.assertRedirects(response, reverse('home'))
+
+    def test_login_esuat(self):
+        response = self.client.post(reverse('login'), {
+            'username': 'inexistent',
+            'password': 'gresita'
+        })
+        self.assertContains(response, "Autentificare esuata", status_code=200)
+
 
 class ConfirmareEmailTest(TestCase):
     def test_confirmare_valida(self):
@@ -88,3 +118,7 @@ class ConfirmareEmailTest(TestCase):
         self.assertTrue(user.email_confirmat)
         self.assertIsNone(user.cod)
         self.assertContains(response, "E-mailul a fost confirmat cu succes")
+
+    def test_confirmare_cod_invalid(self):
+        response = self.client.get(reverse('confirma_mail', args=['cod_inexistent']), follow=True)
+        self.assertContains(response, "Codul de confirmare este invalid sau a expirat.", status_code=200)

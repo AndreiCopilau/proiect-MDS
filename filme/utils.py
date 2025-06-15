@@ -23,7 +23,7 @@ def save_movie_tmdb_if_not_exists(film_dict):
         }
     )
 
-    # if movie exists but has no genres, update them
+    # If movie exists but has no genres, update them
     if not created and not movie.genre_ids and film_dict.get('genre_ids'):
         movie.genre_ids = film_dict['genre_ids']
         movie.save()
@@ -31,12 +31,13 @@ def save_movie_tmdb_if_not_exists(film_dict):
     return movie
 
 
-"""
-Fetches popular movies from TMDB and saves them in the database.
-Returns the list of movies fetched.
-"""
-def get_popular_movies():
-    url = f"https://api.themoviedb.org/3/movie/popular?api_key={settings.TMDB_API_KEY}&language=en-US&page=1"
+def get_popular_movies() -> list:
+    """
+    Fetches popular movies from TMDB and saves them in the database.
+    Returns the list of movies fetched.
+    """
+    
+    url:str = f"https://api.themoviedb.org/3/movie/popular?api_key={settings.TMDB_API_KEY}&language=en-US&page=1"
     response = requests.get(url)
     
     if response.status_code == 200:
